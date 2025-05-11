@@ -41,9 +41,9 @@ export default function LoginPage() {
   async function onSubmit(values: z.infer<typeof formSchema>) {
     try {
       setIsLoading(true);
-      await signIn(values.email, values.password);
+      const { user } = await signIn(values.email, values.password);
       toast.success("Successfully signed in!");
-      router.push("/dashboard");
+      router.push("/"); // Changed from /dashboard to /
     } catch (error: any) {
       toast.error(error.message || "Failed to sign in. Please try again.");
     } finally {
