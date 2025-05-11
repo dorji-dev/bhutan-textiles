@@ -58,7 +58,7 @@ export default function ArtisanRegistrationPage() {
       password: "",
       confirmPassword: "",
       specialty: "",
-      experienceYears: "",
+      experienceYears: 0,
       bio: "",
       location: "",
     },
