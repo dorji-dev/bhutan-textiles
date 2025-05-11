@@ -13,9 +13,14 @@ export default function Logo() {
           priority
         />
       </div>
-      <span className="font-heading text-2xl font-bold text-primary">
-        Bhutan Art
-      </span>
+      <div className="flex flex-col">
+        <span className="font-heading text-2xl font-bold text-primary">
+          Bhutan Art
+        </span>
+        <span className="text-xs text-neutral-600">
+          Zorig Online
+        </span>
+      </div>
     </Link>
   );
 }
