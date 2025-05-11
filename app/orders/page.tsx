@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import {
   Card,
   CardContent,
@@ -25,64 +26,33 @@ import {
 import { Button } from "@/components/ui/button";
 import { Eye, Package, Truck, CheckCircle } from "lucide-react";
 import { format } from "date-fns";
-
-// Mock data for orders
-const mockOrders = [
-  {
-    id: "ORD-001",
-    date: new Date("2024-03-15"),
-    total: 449.98,
-    status: "delivered",
-    items: [
-      {
-        id: 1,
-        name: "Traditional Kira",
-        price: 359.99,
-        quantity: 1,
-        image: "https://images.pexels.com/photos/19287537/pexels-photo-19287537/free-photo-of-woman-holding-fabric.jpeg",
-      },
-      {
-        id: 2,
-        name: "Ceremonial Scarf",
-        price: 89.99,
-        quantity: 1,
-        image: "https://images.pexels.com/photos/6069552/pexels-photo-6069552.jpeg",
-      },
-    ],
-    shipping: {
-      address: "123 Main St",
-      city: "New York",
-      country: "USA",
-      postalCode: "10001",
-    },
-    tracking: "1Z999AA1234567890",
-  },
-  {
-    id: "ORD-002",
-    date: new Date("2024-03-10"),
-    total: 499.99,
-    status: "processing",
-    items: [
-      {
-        id: 3,
-        name: "Thangka Painting",
-        price: 499.99,
-        quantity: 1,
-        image: "https://images.pexels.com/photos/19304177/pexels-photo-19304177/free-photo-of-buddhist-monastery-in-paro-bhutan.jpeg",
-      },
-    ],
-    shipping: {
-      address: "456 Park Ave",
-      city: "Los Angeles",
-      country: "USA",
-      postalCode: "90001",
-    },
-  },
-];
+import { getOrders, Order } from "@/lib/orders";
+import { toast } from "sonner";
 
 export default function OrdersPage() {
-  const [selectedOrder, setSelectedOrder] = useState<any>(null);
+  const router = useRouter();
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [isViewOrderOpen, setIsViewOrderOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    loadOrders();
+  }, []);
+
+  const loadOrders = async () => {
+    try {
+      const data = await getOrders();
+      setOrders(data);
+    } catch (error: any) {
+      toast.error(error.message || "Failed to load orders");
+      if (error.message === "Not authenticated") {
+        router.push("/login");
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -92,6 +62,8 @@ export default function OrdersPage() {
         return "bg-yellow-100 text-yellow-700";
       case "delivered":
         return "bg-green-100 text-green-700";
+      case "cancelled":
+        return "bg-red-100 text-red-700";
       default:
         return "bg-gray-100 text-gray-700";
     }
@@ -109,6 +81,34 @@ export default function OrdersPage() {
         return null;
     }
   };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-accent py-12">
+        <div className="container mx-auto px-4">
+          <div className="text-center">
+            <h1 className="font-heading text-2xl font-bold mb-4">Loading Orders...</h1>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (orders.length === 0) {
+    return (
+      <div className="min-h-screen bg-accent py-12">
+        <div className="container mx-auto px-4">
+          <div className="text-center">
+            <h1 className="font-heading text-2xl font-bold mb-4">No Orders Found</h1>
+            <p className="text-neutral-600 mb-6">You haven't placed any orders yet.</p>
+            <Button onClick={() => router.push("/products/textiles")}>
+              Start Shopping
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-accent py-12">
@@ -141,10 +141,10 @@ export default function OrdersPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {mockOrders.map((order) => (
+                {orders.map((order) => (
                   <TableRow key={order.id}>
                     <TableCell className="font-medium">{order.id}</TableCell>
-                    <TableCell>{format(order.date, "MMM d, yyyy")}</TableCell>
+                    <TableCell>{format(new Date(order.created_at), "MMM d, yyyy")}</TableCell>
                     <TableCell>${order.total.toFixed(2)}</TableCell>
                     <TableCell>
                       <span className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-xs font-medium capitalize ${getStatusColor(order.status)}`}>
@@ -187,7 +187,7 @@ export default function OrdersPage() {
                   <div className="text-right">
                     <p className="text-sm text-neutral-600">Order Date</p>
                     <p className="font-medium">
-                      {format(selectedOrder.date, "MMM d, yyyy")}
+                      {format(new Date(selectedOrder.created_at), "MMM d, yyyy")}
                     </p>
                   </div>
                 </div>
@@ -195,17 +195,19 @@ export default function OrdersPage() {
                 <div>
                   <h3 className="font-medium mb-3">Items</h3>
                   <div className="space-y-4">
-                    {selectedOrder.items.map((item: any) => (
+                    {selectedOrder.items.map((item) => (
                       <div key={item.id} className="flex gap-4 py-3 border-b border-border/50">
-                        <div className="h-20 w-20 bg-accent rounded-lg overflow-hidden">
-                          <img
-                            src={item.image}
-                            alt={item.name}
-                            className="h-full w-full object-cover"
-                          />
-                        </div>
+                        {item.product?.images && (
+                          <div className="h-20 w-20 bg-accent rounded-lg overflow-hidden">
+                            <img
+                              src={item.product.images[0]}
+                              alt={item.product.name}
+                              className="h-full w-full object-cover"
+                            />
+                          </div>
+                        )}
                         <div className="flex-grow">
-                          <h4 className="font-medium">{item.name}</h4>
+                          <h4 className="font-medium">{item.product?.name}</h4>
                           <p className="text-sm text-neutral-600">
                             Quantity: {item.quantity}
                           </p>
@@ -222,10 +224,11 @@ export default function OrdersPage() {
                   <div>
                     <h3 className="font-medium mb-2">Shipping Address</h3>
                     <div className="text-sm text-neutral-600">
-                      <p>{selectedOrder.shipping.address}</p>
-                      <p>{selectedOrder.shipping.city}</p>
-                      <p>{selectedOrder.shipping.country}</p>
-                      <p>{selectedOrder.shipping.postalCode}</p>
+                      <p>{selectedOrder.shipping_address.full_name}</p>
+                      <p>{selectedOrder.shipping_address.address}</p>
+                      <p>{selectedOrder.shipping_address.city}</p>
+                      <p>{selectedOrder.shipping_address.country}</p>
+                      <p>{selectedOrder.shipping_address.postal_code}</p>
                     </div>
                   </div>
                   <div>
@@ -247,14 +250,13 @@ export default function OrdersPage() {
                   </div>
                 </div>
 
-                {selectedOrder.tracking && (
-                  <div>
-                    <h3 className="font-medium mb-2">Tracking Information</h3>
-                    <p className="text-sm text-neutral-600">
-                      Tracking Number: {selectedOrder.tracking}
-                    </p>
+                <div>
+                  <h3 className="font-medium mb-2">Contact Information</h3>
+                  <div className="text-sm text-neutral-600">
+                    <p>Email: {selectedOrder.shipping_address.email}</p>
+                    <p>Phone: {selectedOrder.shipping_address.phone}</p>
                   </div>
-                )}
+                </div>
               </div>
             )}
           </DialogContent>
@@ -262,4 +264,3 @@ export default function OrdersPage() {
       </div>
     </div>
   );
-}

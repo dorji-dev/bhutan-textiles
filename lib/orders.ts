@@ -6,6 +6,9 @@ export interface Order {
   status: 'processing' | 'shipped' | 'delivered' | 'cancelled';
   total: number;
   shipping_address: {
+    full_name: string;
+    email: string;
+    phone: string;
     address: string;
     city: string;
     country: string;
@@ -23,6 +26,43 @@ export interface OrderItem {
   quantity: number;
   price: number;
   created_at: string;
+  product?: {
+    name: string;
+    images: string[];
+  };
+}
+
+export async function getOrders(): Promise<Order[]> {
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session) throw new Error('Not authenticated');
+
+  const { data: orders, error } = await supabase
+    .from('orders')
+    .select(`
+      *,
+      items:order_items (
+        *,
+        product:products (
+          name,
+          product_images (url)
+        )
+      )
+    `)
+    .eq('user_id', session.user.id)
+    .order('created_at', { ascending: false });
+
+  if (error) throw error;
+
+  return orders.map(order => ({
+    ...order,
+    items: order.items.map((item: any) => ({
+      ...item,
+      product: item.product ? {
+        ...item.product,
+        images: item.product.product_images.map((img: any) => img.url)
+      } : null
+    }))
+  }));
 }
 
 export async function createOrder(
