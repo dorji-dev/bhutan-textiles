@@ -34,6 +34,11 @@ export async function getProducts(): Promise<Product[]> {
 export async function createProduct(
   product: Omit<Product, 'id' | 'created_at' | 'updated_at' | 'artisan_id' | 'images'> & { images: string[] }
 ) {
+  // Get the current user's session
+  const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+  if (sessionError) throw sessionError;
+  if (!session?.user?.id) throw new Error('No authenticated user');
+
   // First create the product
   const { data: productData, error: productError } = await supabase
     .from('products')
@@ -44,6 +49,7 @@ export async function createProduct(
       category: product.category,
       stock: product.stock,
       status: product.status,
+      artisan_id: session.user.id, // Add the artisan_id from the current user's session
     }])
     .select()
     .single();
