@@ -17,6 +17,8 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Eye, EyeOff } from "lucide-react";
+import { signIn } from "@/lib/auth";
+import { toast } from "sonner";
 
 const formSchema = z.object({
   email: z.string().email("Please enter a valid email address"),
@@ -37,10 +39,16 @@ export default function LoginPage() {
   });
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
-    setIsLoading(true);
-    // TODO: Implement login logic
-    console.log(values);
-    setIsLoading(false);
+    try {
+      setIsLoading(true);
+      await signIn(values.email, values.password);
+      toast.success("Successfully signed in!");
+      router.push("/dashboard");
+    } catch (error: any) {
+      toast.error(error.message || "Failed to sign in. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
   }
 
   return (
