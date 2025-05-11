@@ -13,71 +13,7 @@ const Footer = () => {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-12">
-          {/* Pages */}
-          <div>
-            <h3 className="text-lg font-semibold mb-4 pb-2 border-b border-white/10">Pages</h3>
-            <ul className="space-y-2">
-              <li>
-                <Link href="/" className="text-white/70 hover:text-[#D4A017] transition-colors">
-                  Home
-                </Link>
-              </li>
-              <li>
-                <Link href="/about" className="text-white/70 hover:text-[#D4A017] transition-colors">
-                  About Us
-                </Link>
-              </li>
-              <li>
-                <Link href="/products" className="text-white/70 hover:text-[#D4A017] transition-colors">
-                  Products
-                </Link>
-              </li>
-              <li>
-                <Link href="/artisans" className="text-white/70 hover:text-[#D4A017] transition-colors">
-                  Artisans
-                </Link>
-              </li>
-              <li>
-                <Link href="/contact" className="text-white/70 hover:text-[#D4A017] transition-colors">
-                  Contact
-                </Link>
-              </li>
-            </ul>
-          </div>
-
-          {/* Categories */}
-          <div>
-            <h3 className="text-lg font-semibold mb-4 pb-2 border-b border-white/10">Categories</h3>
-            <ul className="space-y-2">
-              <li>
-                <Link href="/products/textiles" className="text-white/70 hover:text-[#D4A017] transition-colors">
-                  Textiles
-                </Link>
-              </li>
-              <li>
-                <Link href="/products/paintings" className="text-white/70 hover:text-[#D4A017] transition-colors">
-                  Paintings
-                </Link>
-              </li>
-              <li>
-                <Link href="/products/ceremonial" className="text-white/70 hover:text-[#D4A017] transition-colors">
-                  Ceremonial Items
-                </Link>
-              </li>
-              <li>
-                <Link href="/products/home-decor" className="text-white/70 hover:text-[#D4A017] transition-colors">
-                  Home Decor
-                </Link>
-              </li>
-              <li>
-                <Link href="/products/gifts" className="text-white/70 hover:text-[#D4A017] transition-colors">
-                  Gifts
-                </Link>
-              </li>
-            </ul>
-          </div>
-
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-12 max-w-4xl mx-auto">
           {/* Contact Us */}
           <div>
             <h3 className="text-lg font-semibold mb-4 pb-2 border-b border-white/10">Contact Us</h3>
@@ -104,10 +40,10 @@ const Footer = () => {
             </ul>
           </div>
 
-          {/* Follow Us */}
+          {/* Follow Us & Payment Methods */}
           <div>
-            <h3 className="text-lg font-semibold mb-4 pb-2 border-b border-white/10">Follow Us</h3>
-            <div className="flex space-x-4">
+            <h3 className="text-lg font-semibold mb-4 pb-2 border-b border-white/10">Connect With Us</h3>
+            <div className="flex space-x-4 mb-8">
               <Link href="https://instagram.com" target="_blank" rel="noopener noreferrer" aria-label="Instagram">
                 <div className="h-10 w-10 rounded-full bg-white/10 flex items-center justify-center hover:bg-[#D4A017]/20 transition-colors">
                   <Instagram className="h-5 w-5" />
@@ -125,8 +61,8 @@ const Footer = () => {
               </Link>
             </div>
             
-            <div className="mt-6">
-              <h4 className="text-sm font-semibold mb-3">Payment Methods</h4>
+            <div>
+              <h4 className="text-sm font-semibold mb-3">Secure Payment Methods</h4>
               <div className="flex space-x-2">
                 <div className="h-8 w-12 bg-white rounded opacity-70 hover:opacity-100 transition-opacity"></div>
                 <div className="h-8 w-12 bg-white rounded opacity-70 hover:opacity-100 transition-opacity"></div>
