@@ -29,7 +29,7 @@ export async function signUp(email: string, password: string, full_name: string,
 
   if (profileError) throw profileError;
 
-  return authData;
+  return { user: authData.user };
 }
 
 export async function signIn(email: string, password: string) {
@@ -39,7 +39,17 @@ export async function signIn(email: string, password: string) {
   });
 
   if (error) throw error;
-  return data;
+
+  // Get user profile data
+  const { data: profile, error: profileError } = await supabase
+    .from('users')
+    .select('*')
+    .eq('id', data.user.id)
+    .single();
+
+  if (profileError) throw profileError;
+
+  return { user: profile };
 }
 
 export async function signOut() {
@@ -48,9 +58,9 @@ export async function signOut() {
 }
 
 export async function getCurrentUser(): Promise<AuthUser | null> {
-  const { data: { session }, error } = await supabase.auth.getSession();
+  const { data: { session }, error: sessionError } = await supabase.auth.getSession();
   
-  if (error || !session) return null;
+  if (sessionError || !session) return null;
 
   const { data: profile, error: profileError } = await supabase
     .from('users')
