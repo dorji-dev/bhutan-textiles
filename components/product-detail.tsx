@@ -8,66 +8,10 @@ import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { ChevronLeft, ChevronRight, X, ShoppingCart } from "lucide-react";
 import { useCartStore } from "@/lib/cart-store";
 import CartModal from "./cart-modal";
-
-const getRelatedProducts = (category: string, currentId: string) => {
-  const textileProducts = [
-    {
-      id: "3",
-      name: "Ceremonial Scarf",
-      price: 89.99,
-      image: "https://images.pexels.com/photos/6069552/pexels-photo-6069552.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2",
-      description: "Handwoven silk scarf used in formal ceremonies",
-    },
-    {
-      id: "4",
-      name: "Bhutanese Tapestry",
-      price: 249.99,
-      image: "https://images.pexels.com/photos/5913169/pexels-photo-5913169.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2",
-      description: "Wall hanging with traditional motifs and symbols",
-    },
-  ];
-
-  const paintingProducts = [
-    {
-      id: "5",
-      name: "Mandala Art",
-      price: 399.99,
-      image: "https://images.pexels.com/photos/7486798/pexels-photo-7486798.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2",
-      description: "Intricate geometric patterns representing the cosmos",
-    },
-    {
-      id: "6",
-      name: "Dzong Architecture",
-      price: 299.99,
-      image: "https://images.pexels.com/photos/19304175/pexels-photo-19304175/free-photo-of-traditional-bhutanese-style-building-in-paro-trongsa-dzong.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2",
-      description: "Watercolor painting of a traditional Bhutanese fortress",
-    },
-  ];
-
-  return category === "textiles" ? textileProducts : paintingProducts;
-};
+import { Product } from "@/lib/products";
 
 interface ProductDetailProps {
-  product: {
-    id: string;
-    name: string;
-    price: number;
-    category: string;
-    description: string;
-    images: string[];
-    details: {
-      material: string;
-      technique: string;
-      origin: string;
-      dimensions: string;
-      care: string;
-    };
-    artisan: {
-      name: string;
-      location: string;
-      story: string;
-    };
-  };
+  product: Product;
 }
 
 export default function ProductDetail({ product }: ProductDetailProps) {
@@ -76,7 +20,41 @@ export default function ProductDetail({ product }: ProductDetailProps) {
   const [isCartOpen, setIsCartOpen] = useState(false);
   const addItem = useCartStore((state) => state.addItem);
 
-  const relatedProducts = getRelatedProducts(product.category, product.id);
+  if (!product || !product.images || product.images.length === 0) {
+    return (
+      <div className="min-h-screen bg-accent py-12">
+        <div className="container mx-auto px-4">
+          <div className="text-center">
+            <h1 className="font-heading text-2xl font-bold mb-4">
+              Product not found
+            </h1>
+            <p className="text-neutral-600">
+              The product you're looking for doesn't exist or has been removed.
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  const relatedProducts = [
+    {
+      id: "3",
+      name: "Ceremonial Scarf",
+      price: 89.99,
+      category: "textiles",
+      description: "Handwoven silk scarf used in formal ceremonies",
+      images: ["https://images.pexels.com/photos/6069552/pexels-photo-6069552.jpeg"],
+    },
+    {
+      id: "4",
+      name: "Bhutanese Tapestry",
+      price: 249.99,
+      category: "textiles",
+      description: "Wall hanging with traditional motifs and symbols",
+      images: ["https://images.pexels.com/photos/5913169/pexels-photo-5913169.jpeg"],
+    },
+  ];
 
   const nextImage = () => {
     setSelectedImage((prev) => (prev + 1) % product.images.length);
@@ -142,26 +120,30 @@ export default function ProductDetail({ product }: ProductDetailProps) {
               <p className="text-neutral-600">{product.description}</p>
             </div>
 
-            <div className="space-y-4">
-              <h3 className="font-semibold text-lg">Product Details</h3>
-              <dl className="space-y-2">
-                {Object.entries(product.details).map(([key, value]) => (
-                  <div key={key} className="grid grid-cols-3 gap-4">
-                    <dt className="font-medium text-neutral-600 capitalize">{key}:</dt>
-                    <dd className="col-span-2">{value}</dd>
-                  </div>
-                ))}
-              </dl>
-            </div>
-
-            <div className="space-y-4">
-              <h3 className="font-semibold text-lg">Artisan</h3>
-              <div className="bg-white p-4 rounded-lg border border-border/50">
-                <p className="font-medium">{product.artisan.name}</p>
-                <p className="text-sm text-neutral-600">{product.artisan.location}</p>
-                <p className="mt-2 text-sm">{product.artisan.story}</p>
+            {product.details && (
+              <div className="space-y-4">
+                <h3 className="font-semibold text-lg">Product Details</h3>
+                <dl className="space-y-2">
+                  {Object.entries(product.details).map(([key, value]) => (
+                    <div key={key} className="grid grid-cols-3 gap-4">
+                      <dt className="font-medium text-neutral-600 capitalize">{key}:</dt>
+                      <dd className="col-span-2">{value}</dd>
+                    </div>
+                  ))}
+                </dl>
               </div>
-            </div>
+            )}
+
+            {product.artisan && (
+              <div className="space-y-4">
+                <h3 className="font-semibold text-lg">Artisan</h3>
+                <div className="bg-white p-4 rounded-lg border border-border/50">
+                  <p className="font-medium">{product.artisan.name}</p>
+                  <p className="text-sm text-neutral-600">{product.artisan.location}</p>
+                  <p className="mt-2 text-sm">{product.artisan.story}</p>
+                </div>
+              </div>
+            )}
 
             <Button 
               size="lg" 
