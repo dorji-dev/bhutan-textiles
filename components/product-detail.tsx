@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import ProductCard from "@/components/product-card";
@@ -9,6 +10,7 @@ import { ChevronLeft, ChevronRight, X, ShoppingCart, Plus, Minus } from "lucide-
 import CartModal from "./cart-modal";
 import { Product, getProducts } from "@/lib/products";
 import { addToCart } from "@/lib/cart";
+import { getCurrentUser } from "@/lib/auth";
 import { toast } from "sonner";
 
 interface ProductDetailProps {
@@ -16,28 +18,36 @@ interface ProductDetailProps {
 }
 
 export default function ProductDetail({ product }: ProductDetailProps) {
+  const router = useRouter();
   const [selectedImage, setSelectedImage] = useState(0);
   const [isImageDialogOpen, setIsImageDialogOpen] = useState(false);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [quantity, setQuantity] = useState(1);
   const [relatedProducts, setRelatedProducts] = useState<Product[]>([]);
   const [isAddingToCart, setIsAddingToCart] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   useEffect(() => {
-    async function loadRelatedProducts() {
-      try {
-        const allProducts = await getProducts();
-        const filtered = allProducts
-          .filter(p => p.category === product.category && p.id !== product.id)
-          .slice(0, 4);
-        setRelatedProducts(filtered);
-      } catch (error) {
-        console.error('Error loading related products:', error);
-      }
-    }
-
+    checkAuth();
     loadRelatedProducts();
   }, [product.category, product.id]);
+
+  const checkAuth = async () => {
+    const user = await getCurrentUser();
+    setIsAuthenticated(!!user);
+  };
+
+  const loadRelatedProducts = async () => {
+    try {
+      const allProducts = await getProducts();
+      const filtered = allProducts
+        .filter(p => p.category === product.category && p.id !== product.id)
+        .slice(0, 4);
+      setRelatedProducts(filtered);
+    } catch (error) {
+      console.error('Error loading related products:', error);
+    }
+  };
 
   if (!product || !product.images || product.images.length === 0) {
     return (
@@ -65,6 +75,11 @@ export default function ProductDetail({ product }: ProductDetailProps) {
   };
 
   const handleAddToCart = async () => {
+    if (!isAuthenticated) {
+      router.push('/login');
+      return;
+    }
+
     try {
       setIsAddingToCart(true);
       await addToCart(product.id, quantity);
