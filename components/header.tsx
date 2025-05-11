@@ -1,11 +1,15 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Menu, X, ShoppingBag, LayoutDashboard, User } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useCartStore } from "@/lib/cart-store";
 import CartModal from "./cart-modal";
+import { signOut } from "@/lib/auth";
+import { toast } from "sonner";
+
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -15,6 +19,7 @@ import {
 import { Button } from "@/components/ui/button";
 
 const Header = () => {
+  const router = useRouter();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const items = useCartStore((state) => state.items);
@@ -24,6 +29,16 @@ const Header = () => {
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
+  };
+
+  const handleLogout = async () => {
+    try {
+      await signOut();
+      toast.success("Successfully logged out");
+      router.push("/");
+    } catch (error: any) {
+      toast.error(error.message || "Failed to log out");
+    }
   };
 
   return (
@@ -116,7 +131,7 @@ const Header = () => {
                   <DropdownMenuItem asChild>
                     <Link href="/orders">My Orders</Link>
                   </DropdownMenuItem>
-                  <DropdownMenuItem>
+                  <DropdownMenuItem onClick={handleLogout}>
                     Logout
                   </DropdownMenuItem>
                 </DropdownMenuContent>
@@ -124,7 +139,7 @@ const Header = () => {
             ) : (
               <>
                 <Button variant="ghost" className="hover:text-primary">
-                  Login
+                  <Link href="/login">Login</Link>
                 </Button>
 
                 <DropdownMenu>
@@ -236,14 +251,21 @@ const Header = () => {
                   >
                     My Orders
                   </Link>
-                  <Button variant="ghost" className="justify-start hover:text-primary">
+                  <Button 
+                    variant="ghost" 
+                    className="justify-start hover:text-primary"
+                    onClick={() => {
+                      handleLogout();
+                      setIsMenuOpen(false);
+                    }}
+                  >
                     Logout
                   </Button>
                 </>
               ) : (
                 <>
                   <Button variant="ghost" className="justify-start hover:text-primary">
-                    Login
+                    <Link href="/login">Login</Link>
                   </Button>
                   <div className="space-y-2 pl-2">
                     <p className="text-sm font-medium text-neutral-800">Register as</p>
