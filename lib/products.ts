@@ -21,37 +21,20 @@ export async function getProducts(): Promise<Product[]> {
       *,
       product_images (url)
     `)
-    .eq('status', 'active');
+    .order('created_at', { ascending: false });
 
   if (error) throw error;
 
   return products.map(product => ({
     ...product,
-    images: product.product_images.map((img: any) => img.url)
+    images: product.product_images?.map((img: any) => img.url) || []
   }));
 }
 
-export async function getProductById(id: string): Promise<Product | null> {
-  const { data: product, error } = await supabase
-    .from('products')
-    .select(`
-      *,
-      product_images (url)
-    `)
-    .eq('id', id)
-    .single();
-
-  if (error) return null;
-
-  return {
-    ...product,
-    images: product.product_images.map((img: any) => img.url)
-  };
-}
-
 export async function createProduct(
-  product: Omit<Product, 'id' | 'created_at' | 'updated_at' | 'images'> & { images: string[] }
+  product: Omit<Product, 'id' | 'created_at' | 'updated_at' | 'artisan_id' | 'images'> & { images: string[] }
 ) {
+  // First create the product
   const { data: productData, error: productError } = await supabase
     .from('products')
     .insert([{
@@ -61,13 +44,13 @@ export async function createProduct(
       category: product.category,
       stock: product.stock,
       status: product.status,
-      artisan_id: product.artisan_id,
     }])
     .select()
     .single();
 
   if (productError) throw productError;
 
+  // Then add the images
   if (product.images.length > 0) {
     const { error: imagesError } = await supabase
       .from('product_images')
@@ -86,15 +69,24 @@ export async function createProduct(
 
 export async function updateProduct(
   id: string,
-  updates: Partial<Omit<Product, 'id' | 'created_at' | 'updated_at' | 'images'>> & { images?: string[] }
+  updates: Partial<Omit<Product, 'id' | 'created_at' | 'updated_at' | 'artisan_id'>> & { images?: string[] }
 ) {
+  // Update product details
   const { error: productError } = await supabase
     .from('products')
-    .update(updates)
+    .update({
+      name: updates.name,
+      description: updates.description,
+      price: updates.price,
+      category: updates.category,
+      stock: updates.stock,
+      status: updates.status,
+    })
     .eq('id', id);
 
   if (productError) throw productError;
 
+  // Update images if provided
   if (updates.images) {
     // Delete existing images
     await supabase

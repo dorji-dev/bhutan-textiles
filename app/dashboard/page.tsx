@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
@@ -85,6 +85,10 @@ export default function DashboardPage() {
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
 
+  useEffect(() => {
+    loadProducts();
+  }, []);
+
   const addProductForm = useForm<z.infer<typeof productSchema>>({
     resolver: zodResolver(productSchema),
     defaultValues: {
@@ -116,7 +120,7 @@ export default function DashboardPage() {
       const data = await getProducts();
       setProducts(data);
     } catch (error: any) {
-      toast.error(error.message);
+      toast.error(error.message || "Failed to load products");
     }
   };
 
