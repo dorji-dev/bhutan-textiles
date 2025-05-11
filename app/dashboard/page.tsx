@@ -66,9 +66,9 @@ import { toast } from "sonner";
 const productSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
   description: z.string().min(10, "Description must be at least 10 characters"),
-  price: z.number().min(0, "Price must be greater than 0"),
+  price: z.string().transform((val) => Number(val)),
   category: z.enum(["textiles", "paintings"]),
-  stock: z.number().min(0, "Stock must be greater than or equal to 0"),
+  stock: z.string().transform((val) => Number(val)),
   status: z.enum(["active", "inactive"]),
   images: z.array(z.string()).min(1, "At least one image is required"),
 });
@@ -90,9 +90,9 @@ export default function DashboardPage() {
     defaultValues: {
       name: "",
       description: "",
-      price: 0,
+      price: "0",
       category: "textiles",
-      stock: 0,
+      stock: "0",
       status: "active",
       images: [],
     },
@@ -103,9 +103,9 @@ export default function DashboardPage() {
     defaultValues: {
       name: "",
       description: "",
-      price: 0,
+      price: "0",
       category: "textiles",
-      stock: 0,
+      stock: "0",
       status: "active",
       images: [],
     },
@@ -150,12 +150,7 @@ export default function DashboardPage() {
   const handleAddProduct = async (values: z.infer<typeof productSchema>) => {
     try {
       setIsLoading(true);
-      const parsedValues = {
-        ...values,
-        price: Number(values.price),
-        stock: Number(values.stock)
-      };
-      await createProduct(parsedValues);
+      await createProduct(values);
       toast.success("Product created successfully");
       setIsAddProductOpen(false);
       setNewImagePreviews([]);
@@ -173,12 +168,7 @@ export default function DashboardPage() {
 
     try {
       setIsLoading(true);
-      const parsedValues = {
-        ...values,
-        price: Number(values.price),
-        stock: Number(values.stock)
-      };
-      await updateProduct(selectedProduct.id, parsedValues);
+      await updateProduct(selectedProduct.id, values);
       toast.success("Product updated successfully");
       setIsEditProductOpen(false);
       setEditImagePreviews([]);
@@ -207,9 +197,9 @@ export default function DashboardPage() {
     editProductForm.reset({
       name: product.name,
       description: product.description,
-      price: product.price,
+      price: String(product.price),
       category: product.category,
-      stock: product.stock,
+      stock: String(product.stock),
       status: product.status,
       images: product.images,
     });
