@@ -6,7 +6,7 @@ import Link from "next/link";
 import { Menu, X, ShoppingBag, LayoutDashboard, User } from "lucide-react";
 import { cn } from "@/lib/utils";
 import CartModal from "./cart-modal";
-import { signOut } from "@/lib/auth";
+import { signOut, getCurrentUser, AuthUser } from "@/lib/auth";
 import { toast } from "sonner";
 import { getCartItems } from "@/lib/cart";
 
@@ -23,19 +23,25 @@ const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [cartItems, setCartItems] = useState<any[]>([]);
-  const isLoggedIn = false; // TODO: Replace with actual auth state
+  const [currentUser, setCurrentUser] = useState<AuthUser | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    loadCartItems();
+    loadUserAndCart();
   }, []);
 
-  const loadCartItems = async () => {
+  const loadUserAndCart = async () => {
     try {
-      const items = await getCartItems();
-      setCartItems(items);
+      const user = await getCurrentUser();
+      setCurrentUser(user);
+      if (user) {
+        const items = await getCartItems();
+        setCartItems(items);
+      }
     } catch (error) {
-      // If not authenticated or other error, silently fail
-      setCartItems([]);
+      console.error('Error loading user data:', error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -48,12 +54,18 @@ const Header = () => {
   const handleLogout = async () => {
     try {
       await signOut();
+      setCurrentUser(null);
+      setCartItems([]);
       toast.success("Successfully logged out");
       router.push("/");
     } catch (error: any) {
       toast.error(error.message || "Failed to log out");
     }
   };
+
+  if (isLoading) {
+    return null; // Don't render anything while loading
+  }
 
   return (
     <header className="sticky top-0 z-50 w-full bg-white bg-opacity-95 backdrop-blur-sm shadow-sm">
@@ -108,37 +120,41 @@ const Header = () => {
               Contact
             </Link>
 
-            <Link
-              href="/dashboard"
-              className="text-sm font-medium text-neutral-800 hover:text-primary transition-colors flex items-center gap-1"
-            >
-              <LayoutDashboard className="h-4 w-4" />
-              Dashboard
-            </Link>
+            {currentUser?.role === 'artisan' && (
+              <Link
+                href="/dashboard"
+                className="text-sm font-medium text-neutral-800 hover:text-primary transition-colors flex items-center gap-1"
+              >
+                <LayoutDashboard className="h-4 w-4" />
+                Dashboard
+              </Link>
+            )}
           </nav>
 
           {/* Right side navigation (cart, login, etc.) */}
           <div className="hidden md:flex items-center space-x-4">
-            <Button
-              variant="ghost"
-              size="icon"
-              className="relative hover:text-primary"
-              onClick={() => setIsCartOpen(true)}
-            >
-              <ShoppingBag className="h-5 w-5" />
-              {cartItemCount > 0 && (
-                <span className="absolute -top-1 -right-1 bg-primary text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
-                  {cartItemCount}
-                </span>
-              )}
-            </Button>
+            {currentUser && (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="relative hover:text-primary"
+                onClick={() => setIsCartOpen(true)}
+              >
+                <ShoppingBag className="h-5 w-5" />
+                {cartItemCount > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-primary text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                    {cartItemCount}
+                  </span>
+                )}
+              </Button>
+            )}
 
-            {isLoggedIn ? (
+            {currentUser ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" className="hover:text-primary">
                     <User className="h-5 w-5 mr-2" />
-                    My Account
+                    {currentUser.full_name}
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-40">
@@ -152,7 +168,7 @@ const Header = () => {
               </DropdownMenu>
             ) : (
               <>
-                <Button variant="ghost" className="hover:text-primary">
+                <Button variant="ghost" asChild>
                   <Link href="/login">Login</Link>
                 </Button>
 
@@ -177,19 +193,21 @@ const Header = () => {
 
           {/* Mobile menu button */}
           <div className="md:hidden flex items-center">
-            <Button
-              variant="ghost"
-              size="icon"
-              className="relative hover:text-primary mr-2"
-              onClick={() => setIsCartOpen(true)}
-            >
-              <ShoppingBag className="h-5 w-5" />
-              {cartItemCount > 0 && (
-                <span className="absolute -top-1 -right-1 bg-primary text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
-                  {cartItemCount}
-                </span>
-              )}
-            </Button>
+            {currentUser && (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="relative hover:text-primary mr-2"
+                onClick={() => setIsCartOpen(true)}
+              >
+                <ShoppingBag className="h-5 w-5" />
+                {cartItemCount > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-primary text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                    {cartItemCount}
+                  </span>
+                )}
+              </Button>
+            )}
             <Button
               variant="ghost"
               size="icon"
@@ -247,16 +265,18 @@ const Header = () => {
             >
               Contact
             </Link>
-            <Link
-              href="/dashboard"
-              className="text-sm font-medium text-neutral-800 hover:text-primary transition-colors flex items-center gap-1"
-              onClick={() => setIsMenuOpen(false)}
-            >
-              <LayoutDashboard className="h-4 w-4" />
-              Dashboard
-            </Link>
+            {currentUser?.role === 'artisan' && (
+              <Link
+                href="/dashboard"
+                className="text-sm font-medium text-neutral-800 hover:text-primary transition-colors flex items-center gap-1"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                <LayoutDashboard className="h-4 w-4" />
+                Dashboard
+              </Link>
+            )}
             <div className="pt-2 flex flex-col space-y-3">
-              {isLoggedIn ? (
+              {currentUser ? (
                 <>
                   <Link
                     href="/orders"
@@ -278,7 +298,7 @@ const Header = () => {
                 </>
               ) : (
                 <>
-                  <Button variant="ghost" className="justify-start hover:text-primary">
+                  <Button variant="ghost" className="justify-start hover:text-primary" asChild>
                     <Link href="/login">Login</Link>
                   </Button>
                   <div className="space-y-2 pl-2">

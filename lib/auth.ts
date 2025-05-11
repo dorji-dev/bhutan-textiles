@@ -52,11 +52,13 @@ export async function getCurrentUser(): Promise<AuthUser | null> {
   
   if (error || !session) return null;
 
-  const { data: profile } = await supabase
+  const { data: profile, error: profileError } = await supabase
     .from('users')
     .select('*')
     .eq('id', session.user.id)
     .single();
+
+  if (profileError) return null;
 
   return profile;
 }
