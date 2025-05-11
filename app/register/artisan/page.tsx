@@ -26,14 +26,17 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Eye, EyeOff } from "lucide-react";
+import { signUp } from "@/lib/auth";
+import { createArtisanProfile } from "@/lib/artisans";
+import { toast } from "sonner";
 
 const formSchema = z.object({
-  name: z.string().min(2, "Name must be at least 2 characters"),
+  fullName: z.string().min(2, "Name must be at least 2 characters"),
   email: z.string().email("Please enter a valid email address"),
   password: z.string().min(8, "Password must be at least 8 characters"),
   confirmPassword: z.string(),
   specialty: z.string().min(1, "Please select your specialty"),
-  experience: z.string().min(1, "Please enter your years of experience"),
+  experienceYears: z.string().transform((val) => parseInt(val, 10)),
   bio: z.string().min(50, "Bio must be at least 50 characters"),
   location: z.string().min(2, "Please enter your location in Bhutan"),
 }).refine((data) => data.password === data.confirmPassword, {
@@ -50,22 +53,44 @@ export default function ArtisanRegistrationPage() {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      name: "",
+      fullName: "",
       email: "",
       password: "",
       confirmPassword: "",
       specialty: "",
-      experience: "",
+      experienceYears: "",
       bio: "",
       location: "",
     },
   });
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
-    setIsLoading(true);
-    // TODO: Implement registration logic
-    console.log(values);
-    setIsLoading(false);
+    try {
+      setIsLoading(true);
+      
+      // Register the user
+      const { user } = await signUp(values.email, values.password, values.fullName, "artisan");
+      
+      if (!user?.id) {
+        throw new Error("Failed to create user account");
+      }
+
+      // Create artisan profile
+      await createArtisanProfile({
+        user_id: user.id,
+        specialty: values.specialty,
+        experience_years: values.experienceYears,
+        bio: values.bio,
+        location: values.location,
+      });
+
+      toast.success("Registration successful! Please check your email to verify your account.");
+      router.push("/login");
+    } catch (error: any) {
+      toast.error(error.message || "Something went wrong. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
   }
 
   return (
@@ -85,7 +110,7 @@ export default function ArtisanRegistrationPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <FormField
                 control={form.control}
-                name="name"
+                name="fullName"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Full Name</FormLabel>
@@ -206,7 +231,7 @@ export default function ArtisanRegistrationPage() {
 
               <FormField
                 control={form.control}
-                name="experience"
+                name="experienceYears"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Years of Experience</FormLabel>
