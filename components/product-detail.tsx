@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import ProductCard from "@/components/product-card";
@@ -8,7 +8,7 @@ import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { ChevronLeft, ChevronRight, X, ShoppingCart } from "lucide-react";
 import { useCartStore } from "@/lib/cart-store";
 import CartModal from "./cart-modal";
-import { Product } from "@/lib/products";
+import { Product, getProducts } from "@/lib/products";
 
 interface ProductDetailProps {
   product: Product;
@@ -18,7 +18,24 @@ export default function ProductDetail({ product }: ProductDetailProps) {
   const [selectedImage, setSelectedImage] = useState(0);
   const [isImageDialogOpen, setIsImageDialogOpen] = useState(false);
   const [isCartOpen, setIsCartOpen] = useState(false);
+  const [relatedProducts, setRelatedProducts] = useState<Product[]>([]);
   const addItem = useCartStore((state) => state.addItem);
+
+  useEffect(() => {
+    async function loadRelatedProducts() {
+      try {
+        const allProducts = await getProducts();
+        const filtered = allProducts
+          .filter(p => p.category === product.category && p.id !== product.id)
+          .slice(0, 4);
+        setRelatedProducts(filtered);
+      } catch (error) {
+        console.error('Error loading related products:', error);
+      }
+    }
+
+    loadRelatedProducts();
+  }, [product.category, product.id]);
 
   if (!product || !product.images || product.images.length === 0) {
     return (
@@ -136,6 +153,19 @@ export default function ProductDetail({ product }: ProductDetailProps) {
             </Button>
           </div>
         </div>
+
+        {relatedProducts.length > 0 && (
+          <div className="mt-16">
+            <h2 className="font-heading text-2xl font-bold text-neutral-900 mb-6">
+              Related Products
+            </h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+              {relatedProducts.map((product) => (
+                <ProductCard key={product.id} product={product} />
+              ))}
+            </div>
+          </div>
+        )}
 
         <Dialog open={isImageDialogOpen} onOpenChange={setIsImageDialogOpen}>
           <DialogContent className="max-w-7xl w-full h-[90vh] p-0 bg-black">
