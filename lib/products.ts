@@ -12,6 +12,18 @@ export interface Product {
   created_at: string;
   updated_at: string;
   images: string[];
+  details?: {
+    material: string;
+    technique: string;
+    origin: string;
+    dimensions: string;
+    care: string;
+  };
+  artisan?: {
+    name: string;
+    location: string;
+    story: string;
+  };
 }
 
 export async function getProducts(): Promise<Product[]> {
@@ -31,15 +43,50 @@ export async function getProducts(): Promise<Product[]> {
   }));
 }
 
+export async function getProductById(id: string): Promise<Product | null> {
+  const { data: product, error } = await supabase
+    .from('products')
+    .select(`
+      *,
+      product_images (url),
+      artisan:users!products_artisan_id_fkey (
+        full_name,
+        artisan_profiles (
+          location,
+          bio
+        )
+      )
+    `)
+    .eq('id', id)
+    .single();
+
+  if (error) return null;
+
+  return {
+    ...product,
+    images: product.product_images?.map((img: any) => img.url) || [],
+    details: {
+      material: 'Handwoven Cotton',
+      technique: 'Traditional Backstrap Loom',
+      origin: 'Thimphu, Bhutan',
+      dimensions: '200cm x 150cm',
+      care: 'Dry clean only'
+    },
+    artisan: {
+      name: product.artisan?.full_name || 'Unknown Artisan',
+      location: product.artisan?.artisan_profiles?.[0]?.location || 'Bhutan',
+      story: product.artisan?.artisan_profiles?.[0]?.bio || 'A skilled artisan preserving Bhutanese craft traditions.'
+    }
+  };
+}
+
 export async function createProduct(
   product: Omit<Product, 'id' | 'created_at' | 'updated_at' | 'artisan_id' | 'images'> & { images: string[] }
 ) {
-  // Get the current user's session
   const { data: { session }, error: sessionError } = await supabase.auth.getSession();
   if (sessionError) throw sessionError;
   if (!session?.user?.id) throw new Error('No authenticated user');
 
-  // First create the product
   const { data: productData, error: productError } = await supabase
     .from('products')
     .insert([{
@@ -49,14 +96,13 @@ export async function createProduct(
       category: product.category,
       stock: product.stock,
       status: product.status,
-      artisan_id: session.user.id, // Add the artisan_id from the current user's session
+      artisan_id: session.user.id,
     }])
     .select()
     .single();
 
   if (productError) throw productError;
 
-  // Then add the images
   if (product.images.length > 0) {
     const { error: imagesError } = await supabase
       .from('product_images')
@@ -77,7 +123,6 @@ export async function updateProduct(
   id: string,
   updates: Partial<Omit<Product, 'id' | 'created_at' | 'updated_at' | 'artisan_id'>> & { images?: string[] }
 ) {
-  // Update product details
   const { error: productError } = await supabase
     .from('products')
     .update({
@@ -92,15 +137,12 @@ export async function updateProduct(
 
   if (productError) throw productError;
 
-  // Update images if provided
   if (updates.images) {
-    // Delete existing images
     await supabase
       .from('product_images')
       .delete()
       .eq('product_id', id);
 
-    // Insert new images
     const { error: imagesError } = await supabase
       .from('product_images')
       .insert(
