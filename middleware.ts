@@ -10,10 +10,11 @@ export async function middleware(req: NextRequest) {
     data: { session },
   } = await supabase.auth.getSession();
 
-  // Check if user is authenticated
+  // Check if user is authenticated for protected routes
   if (!session) {
     if (req.nextUrl.pathname.startsWith('/dashboard') || 
-        req.nextUrl.pathname.startsWith('/orders')) {
+        req.nextUrl.pathname.startsWith('/orders') ||
+        req.nextUrl.pathname.startsWith('/checkout')) {
       return NextResponse.redirect(new URL('/login', req.url));
     }
     return res;
@@ -43,5 +44,6 @@ export const config = {
   matcher: [
     '/dashboard/:path*',
     '/orders/:path*',
+    '/checkout/:path*',
   ],
 };
