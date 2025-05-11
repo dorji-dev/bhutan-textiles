@@ -23,7 +23,7 @@ const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const items = useCartStore((state) => state.items);
-  const isLoggedIn = true; // TODO: Replace with actual auth state
+  const isLoggedIn = false; // TODO: Replace with actual auth state
 
   const cartItemCount = items.reduce((total, item) => total + item.quantity, 0);
 
