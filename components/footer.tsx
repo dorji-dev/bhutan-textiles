@@ -77,22 +77,9 @@ const Footer = () => {
       {/* Copyright */}
       <div className="border-t border-white/10">
         <div className="container mx-auto px-4 py-6">
-          <div className="flex flex-col md:flex-row justify-between items-center">
-            <p className="text-sm text-white/60 mb-4 md:mb-0">
-              © 2025 Bhutan Art. All Rights Reserved.
-            </p>
-            <div className="flex space-x-4 text-sm text-white/60">
-              <Link href="/privacy-policy" className="hover:text-white transition-colors">
-                Privacy Policy
-              </Link>
-              <Link href="/terms-of-service" className="hover:text-white transition-colors">
-                Terms of Service
-              </Link>
-              <Link href="/shipping-policy" className="hover:text-white transition-colors">
-                Shipping Policy
-              </Link>
-            </div>
-          </div>
+          <p className="text-sm text-white/60 text-center">
+            © 2025 Bhutan Art. All Rights Reserved.
+          </p>
         </div>
       </div>
     </footer>
