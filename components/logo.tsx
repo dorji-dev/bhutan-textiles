@@ -6,7 +6,7 @@ export default function Logo() {
     <Link href="/" className="flex items-center gap-2">
       <div className="relative w-12 h-12">
         <Image
-          src="/logo.png"
+          src="/logo.jpg"
           alt="Zorig Online Logo"
           width={48}
           height={48}

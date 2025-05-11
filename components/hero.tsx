@@ -8,8 +8,9 @@ const Hero = () => {
       {/* Background Image with Overlay */}
       <div 
         className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+        // replace background image with background.jpg from public folder
         style={{ 
-          backgroundImage: "url('https://images.pexels.com/photos/16929460/pexels-photo-16929460/free-photo-of-prayer-flags-hanging-in-paro-taktsang-monastery.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2')",
+          backgroundImage: "url('/background.jpg')",
         }}
       >
         <div className="absolute inset-0 bg-gradient-to-r from-[#1E3A8A]/80 via-[#A61C3C]/60 to-[#1E3A8A]/80"></div>
