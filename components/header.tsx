@@ -158,9 +158,11 @@ const Header = () => {
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-40">
-                  <DropdownMenuItem asChild>
-                    <Link href="/orders">My Orders</Link>
-                  </DropdownMenuItem>
+                  {currentUser.role !== 'artisan' && (
+                    <DropdownMenuItem asChild>
+                      <Link href="/orders">My Orders</Link>
+                    </DropdownMenuItem>
+                  )}
                   <DropdownMenuItem onClick={handleLogout}>
                     Logout
                   </DropdownMenuItem>
@@ -278,13 +280,15 @@ const Header = () => {
             <div className="pt-2 flex flex-col space-y-3">
               {currentUser ? (
                 <>
-                  <Link
-                    href="/orders"
-                    className="text-sm font-medium text-neutral-800 hover:text-primary transition-colors"
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    My Orders
-                  </Link>
+                  {currentUser.role !== 'artisan' && (
+                    <Link
+                      href="/orders"
+                      className="text-sm font-medium text-neutral-800 hover:text-primary transition-colors"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      My Orders
+                    </Link>
+                  )}
                   <Button 
                     variant="ghost" 
                     className="justify-start hover:text-primary"
