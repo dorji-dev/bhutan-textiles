@@ -150,7 +150,12 @@ export default function DashboardPage() {
   const handleAddProduct = async (values: z.infer<typeof productSchema>) => {
     try {
       setIsLoading(true);
-      await createProduct(values);
+      const parsedValues = {
+        ...values,
+        price: Number(values.price),
+        stock: Number(values.stock)
+      };
+      await createProduct(parsedValues);
       toast.success("Product created successfully");
       setIsAddProductOpen(false);
       setNewImagePreviews([]);
@@ -168,7 +173,12 @@ export default function DashboardPage() {
 
     try {
       setIsLoading(true);
-      await updateProduct(selectedProduct.id, values);
+      const parsedValues = {
+        ...values,
+        price: Number(values.price),
+        stock: Number(values.stock)
+      };
+      await updateProduct(selectedProduct.id, parsedValues);
       toast.success("Product updated successfully");
       setIsEditProductOpen(false);
       setEditImagePreviews([]);
