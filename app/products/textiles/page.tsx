@@ -174,4 +174,3 @@ export default function TextilesPage() {
       </div>
     </div>
   );
-}
