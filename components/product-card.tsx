@@ -1,16 +1,8 @@
 import Link from "next/link";
-import Image from "next/image";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Eye } from "lucide-react";
-
-interface Product {
-  id: number;
-  name: string;
-  price: number;
-  image: string;
-  description: string;
-}
+import { Product } from "@/lib/products";
 
 interface ProductCardProps {
   product: Product;
@@ -21,7 +13,7 @@ const ProductCard = ({ product }: ProductCardProps) => {
     <Card className="overflow-hidden group transition-all duration-300 hover:shadow-md border border-border/50 hover:border-primary/20">
       <Link href={`/product/${product.id}`} className="block relative aspect-square overflow-hidden">
         <div className="absolute inset-0 bg-cover bg-center transition-transform duration-500 group-hover:scale-105" 
-          style={{backgroundImage: `url(${product.image})`}}></div>
+          style={{backgroundImage: `url(${product.images[0]})`}}></div>
         <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-10 transition-all duration-300"></div>
       </Link>
 
