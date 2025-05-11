@@ -1,6 +1,10 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
+import * as z from "zod";
 import {
   Card,
   CardContent,
@@ -27,6 +31,14 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import {
   Select,
   SelectContent,
   SelectItem,
@@ -48,98 +60,149 @@ import {
   Activity
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { createProduct, getProducts, updateProduct, deleteProduct } from "@/lib/products";
+import { toast } from "sonner";
 
-const mockProducts = [
-  {
-    id: "1",
-    name: "Traditional Kira",
-    category: "textiles",
-    price: 359.99,
-    stock: 5,
-    status: "active",
-    description: "Handwoven traditional Bhutanese women's dress with intricate patterns. Each piece takes months to complete and features unique motifs that tell stories of Bhutanese culture and tradition.",
-    dimensions: "2.5m x 1.5m",
-    material: "Hand-spun silk and cotton",
-    technique: "Traditional backstrap loom weaving",
-    images: [
-      "https://images.pexels.com/photos/19287537/pexels-photo-19287537/free-photo-of-woman-holding-fabric.jpeg",
-      "https://images.pexels.com/photos/6192351/pexels-photo-6192351.jpeg",
-    ],
-  },
-  {
-    id: "2",
-    name: "Thangka Painting",
-    category: "paintings",
-    price: 499.99,
-    stock: 3,
-    status: "active",
-    description: "Traditional Buddhist scroll painting depicting deities, meticulously crafted using natural pigments and gold leaf. This piece showcases the intricate details and spiritual significance of Bhutanese religious art.",
-    dimensions: "60cm x 90cm",
-    material: "Natural pigments, gold leaf on cotton canvas",
-    technique: "Traditional Thangka painting",
-    images: [
-      "https://images.pexels.com/photos/19304177/pexels-photo-19304177/free-photo-of-buddhist-monastery-in-paro-bhutan.jpeg",
-      "https://images.pexels.com/photos/7486798/pexels-photo-7486798.jpeg",
-    ],
-  },
-];
-
-interface ImagePreview {
-  url: string;
-  file?: File;
-}
+const productSchema = z.object({
+  name: z.string().min(2, "Name must be at least 2 characters"),
+  description: z.string().min(10, "Description must be at least 10 characters"),
+  price: z.number().min(0, "Price must be greater than 0"),
+  category: z.enum(["textiles", "paintings"]),
+  stock: z.number().min(0, "Stock must be greater than or equal to 0"),
+  status: z.enum(["active", "inactive"]),
+  images: z.array(z.string()).min(1, "At least one image is required"),
+});
 
 export default function DashboardPage() {
-  const [products] = useState(mockProducts);
+  const router = useRouter();
+  const [products, setProducts] = useState<any[]>([]);
   const [isAddProductOpen, setIsAddProductOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<any>(null);
   const [isViewProductOpen, setIsViewProductOpen] = useState(false);
   const [isEditProductOpen, setIsEditProductOpen] = useState(false);
-  const [newImagePreviews, setNewImagePreviews] = useState<ImagePreview[]>([]);
-  const [editImagePreviews, setEditImagePreviews] = useState<ImagePreview[]>([]);
+  const [newImagePreviews, setNewImagePreviews] = useState<string[]>([]);
+  const [editImagePreviews, setEditImagePreviews] = useState<string[]>([]);
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>, isEdit: boolean) => {
+  const addProductForm = useForm<z.infer<typeof productSchema>>({
+    resolver: zodResolver(productSchema),
+    defaultValues: {
+      name: "",
+      description: "",
+      price: 0,
+      category: "textiles",
+      stock: 0,
+      status: "active",
+      images: [],
+    },
+  });
+
+  const editProductForm = useForm<z.infer<typeof productSchema>>({
+    resolver: zodResolver(productSchema),
+    defaultValues: {
+      name: "",
+      description: "",
+      price: 0,
+      category: "textiles",
+      stock: 0,
+      status: "active",
+      images: [],
+    },
+  });
+
+  const loadProducts = async () => {
+    try {
+      const data = await getProducts();
+      setProducts(data);
+    } catch (error: any) {
+      toast.error(error.message);
+    }
+  };
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>, isEdit: boolean) => {
     const files = e.target.files;
     if (!files) return;
 
-    const newPreviews: ImagePreview[] = Array.from(files).map(file => ({
-      url: URL.createObjectURL(file),
-      file,
-    }));
+    const urls = Array.from(files).map(file => URL.createObjectURL(file));
 
     if (isEdit) {
-      setEditImagePreviews(prev => [...prev, ...newPreviews]);
+      setEditImagePreviews(prev => [...prev, ...urls]);
+      editProductForm.setValue("images", [...editImagePreviews, ...urls]);
     } else {
-      setNewImagePreviews(prev => [...prev, ...newPreviews]);
+      setNewImagePreviews(prev => [...prev, ...urls]);
+      addProductForm.setValue("images", [...newImagePreviews, ...urls]);
     }
   };
 
   const removeImage = (index: number, isEdit: boolean) => {
     if (isEdit) {
-      setEditImagePreviews(prev => prev.filter((_, i) => i !== index));
+      const newPreviews = editImagePreviews.filter((_, i) => i !== index);
+      setEditImagePreviews(newPreviews);
+      editProductForm.setValue("images", newPreviews);
     } else {
-      setNewImagePreviews(prev => prev.filter((_, i) => i !== index));
+      const newPreviews = newImagePreviews.filter((_, i) => i !== index);
+      setNewImagePreviews(newPreviews);
+      addProductForm.setValue("images", newPreviews);
     }
   };
 
-  const handleAddProduct = (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsAddProductOpen(false);
-    setNewImagePreviews([]);
+  const handleAddProduct = async (values: z.infer<typeof productSchema>) => {
+    try {
+      setIsLoading(true);
+      await createProduct(values);
+      toast.success("Product created successfully");
+      setIsAddProductOpen(false);
+      setNewImagePreviews([]);
+      addProductForm.reset();
+      loadProducts();
+    } catch (error: any) {
+      toast.error(error.message);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const handleEditProduct = (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsEditProductOpen(false);
-    setEditImagePreviews([]);
+  const handleEditProduct = async (values: z.infer<typeof productSchema>) => {
+    if (!selectedProduct) return;
+
+    try {
+      setIsLoading(true);
+      await updateProduct(selectedProduct.id, values);
+      toast.success("Product updated successfully");
+      setIsEditProductOpen(false);
+      setEditImagePreviews([]);
+      editProductForm.reset();
+      loadProducts();
+    } catch (error: any) {
+      toast.error(error.message);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleDeleteProduct = async (id: string) => {
+    try {
+      await deleteProduct(id);
+      toast.success("Product deleted successfully");
+      loadProducts();
+    } catch (error: any) {
+      toast.error(error.message);
+    }
   };
 
   const handleEditOpen = (product: any) => {
     setSelectedProduct(product);
-    setEditImagePreviews(
-      product.images.map((url: string) => ({ url }))
-    );
+    setEditImagePreviews(product.images);
+    editProductForm.reset({
+      name: product.name,
+      description: product.description,
+      price: product.price,
+      category: product.category,
+      stock: product.stock,
+      status: product.status,
+      images: product.images,
+    });
     setIsEditProductOpen(true);
   };
 
@@ -185,79 +248,130 @@ export default function DashboardPage() {
                   Add a new product to your collection
                 </DialogDescription>
               </DialogHeader>
-              <form onSubmit={handleAddProduct} className="space-y-4 mt-4">
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Product Name</label>
-                  <Input placeholder="Enter product name" />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Category</label>
-                  <Select>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select category" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="textiles">Textiles</SelectItem>
-                      <SelectItem value="paintings">Paintings</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Price</label>
-                  <Input type="number" placeholder="Enter price" />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Stock</label>
-                  <Input type="number" placeholder="Enter stock quantity" />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Description</label>
-                  <Textarea placeholder="Enter product description" />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Images</label>
-                  <Input 
-                    type="file" 
-                    multiple 
-                    accept="image/*"
-                    onChange={(e) => handleImageUpload(e, false)}
+              <Form {...addProductForm}>
+                <form onSubmit={addProductForm.handleSubmit(handleAddProduct)} className="space-y-4 mt-4">
+                  <FormField
+                    control={addProductForm.control}
+                    name="name"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Product Name</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Enter product name" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
                   />
-                  {newImagePreviews.length > 0 && (
-                    <div className="grid grid-cols-3 gap-4 mt-4">
-                      {newImagePreviews.map((preview, index) => (
-                        <div key={index} className="relative">
-                          <img
-                            src={preview.url}
-                            alt={`Preview ${index + 1}`}
-                            className="w-full h-24 object-cover rounded-lg"
-                          />
-                          <Button
-                            variant="destructive"
-                            size="icon"
-                            className="absolute -top-2 -right-2 h-6 w-6"
-                            onClick={() => removeImage(index, false)}
-                          >
-                            <X className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-                <div className="flex justify-end space-x-2 mt-6">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => {
-                      setIsAddProductOpen(false);
-                      setNewImagePreviews([]);
-                    }}
-                  >
-                    Cancel
-                  </Button>
-                  <Button type="submit">Add Product</Button>
-                </div>
-              </form>
+                  <FormField
+                    control={addProductForm.control}
+                    name="category"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Category</FormLabel>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select category" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="textiles">Textiles</SelectItem>
+                            <SelectItem value="paintings">Paintings</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={addProductForm.control}
+                    name="price"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Price</FormLabel>
+                        <FormControl>
+                          <Input type="number" placeholder="Enter price" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={addProductForm.control}
+                    name="stock"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Stock</FormLabel>
+                        <FormControl>
+                          <Input type="number" placeholder="Enter stock quantity" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={addProductForm.control}
+                    name="description"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Description</FormLabel>
+                        <FormControl>
+                          <Textarea placeholder="Enter product description" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Images</label>
+                    <Input 
+                      type="file" 
+                      multiple 
+                      accept="image/*"
+                      onChange={(e) => handleImageUpload(e, false)}
+                    />
+                    {newImagePreviews.length > 0 && (
+                      <div className="grid grid-cols-3 gap-4 mt-4">
+                        {newImagePreviews.map((preview, index) => (
+                          <div key={index} className="relative">
+                            <img
+                              src={preview}
+                              alt={`Preview ${index + 1}`}
+                              className="w-full h-24 object-cover rounded-lg"
+                            />
+                            <Button
+                              type="button"
+                              variant="destructive"
+                              size="icon"
+                              className="absolute -top-2 -right-2 h-6 w-6"
+                              onClick={() => removeImage(index, false)}
+                            >
+                              <X className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                  <div className="flex justify-end space-x-2 mt-6">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => {
+                        setIsAddProductOpen(false);
+                        setNewImagePreviews([]);
+                        addProductForm.reset();
+                      }}
+                    >
+                      Cancel
+                    </Button>
+                    <Button type="submit" disabled={isLoading}>
+                      {isLoading ? "Adding..." : "Add Product"}
+                    </Button>
+                  </div>
+                </form>
+              </Form>
             </DialogContent>
           </Dialog>
         </div>
@@ -348,7 +462,11 @@ export default function DashboardPage() {
                         >
                           <Pencil className="h-4 w-4" />
                         </Button>
-                        <Button variant="ghost" size="icon">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleDeleteProduct(product.id)}
+                        >
                           <Trash2 className="h-4 w-4 text-destructive" />
                         </Button>
                       </div>
@@ -530,90 +648,130 @@ export default function DashboardPage() {
               </DialogDescription>
             </DialogHeader>
             {selectedProduct && (
-              <form onSubmit={handleEditProduct} className="space-y-4 mt-4">
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Product Name</label>
-                  <Input
-                    defaultValue={selectedProduct.name}
-                    placeholder="Enter product name"
+              <Form {...editProductForm}>
+                <form onSubmit={editProductForm.handleSubmit(handleEditProduct)} className="space-y-4 mt-4">
+                  <FormField
+                    control={editProductForm.control}
+                    name="name"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Product Name</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Enter product name" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
                   />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Category</label>
-                  <Select defaultValue={selectedProduct.category}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="textiles">Textiles</SelectItem>
-                      <SelectItem value="paintings">Paintings</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Price</label>
-                  <Input
-                    type="number"
-                    defaultValue={selectedProduct.price}
-                    placeholder="Enter price"
+                  <FormField
+                    control={editProductForm.control}
+                    name="category"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Category</FormLabel>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="textiles">Textiles</SelectItem>
+                            <SelectItem value="paintings">Paintings</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
                   />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Stock</label>
-                  <Input
-                    type="number"
-                    defaultValue={selectedProduct.stock}
-                    placeholder="Enter stock quantity"
+                  <FormField
+                    control={editProductForm.control}
+                    name="price"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Price</FormLabel>
+                        <FormControl>
+                          <Input type="number" placeholder="Enter price" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
                   />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Description</label>
-                  <Textarea placeholder="Enter product description" />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Images</label>
-                  <Input 
-                    type="file" 
-                    multiple 
-                    accept="image/*"
-                    onChange={(e) => handleImageUpload(e, true)}
+                  <FormField
+                    control={editProductForm.control}
+                    name="stock"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Stock</FormLabel>
+                        <FormControl>
+                          <Input type="number" placeholder="Enter stock quantity" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
                   />
-                  {editImagePreviews.length > 0 && (
-                    <div className="grid grid-cols-3 gap-4 mt-4">
-                      {editImagePreviews.map((preview, index) => (
-                        <div key={index} className="relative">
-                          <img
-                            src={preview.url}
-                            alt={`Preview ${index + 1}`}
-                            className="w-full h-24 object-cover rounded-lg"
-                          />
-                          <Button
-                            variant="destructive"
-                            size="icon"
-                            className="absolute -top-2 -right-2 h-6 w-6"
-                            onClick={() => removeImage(index, true)}
-                          >
-                            <X className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-                <div className="flex justify-end space-x-2 mt-6">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => {
-                      setIsEditProductOpen(false);
-                      setEditImagePreviews([]);
-                    }}
-                  >
-                    Cancel
-                  </Button>
-                  <Button type="submit">Save Changes</Button>
-                </div>
-              </form>
+                  <FormField
+                    control={editProductForm.control}
+                    name="description"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Description</FormLabel>
+                        <FormControl>
+                          <Textarea placeholder="Enter product description" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Images</label>
+                    <Input 
+                      type="file" 
+                      multiple 
+                      accept="image/*"
+                      onChange={(e) => handleImageUpload(e, true)}
+                    />
+                    {editImagePreviews.length > 0 && (
+                      <div className="grid grid-cols-3 gap-4 mt-4">
+                        {editImagePreviews.map((preview, index) => (
+                          <div key={index} className="relative">
+                            <img
+                              src={preview}
+                              alt={`Preview ${index + 1}`}
+                              className="w-full h-24 object-cover rounded-lg"
+                            />
+                            <Button
+                              type="button"
+                              variant="destructive"
+                              size="icon"
+                              className="absolute -top-2 -right-2 h-6 w-6"
+                              onClick={() => removeImage(index, true)}
+                            >
+                              <X className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                  <div className="flex justify-end space-x-2 mt-6">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => {
+                        setIsEditProductOpen(false);
+                        setEditImagePreviews([]);
+                        editProductForm.reset();
+                      }}
+                    >
+                      Cancel
+                    </Button>
+                    <Button type="submit" disabled={isLoading}>
+                      {isLoading ? "Saving..." : "Save Changes"}
+                    </Button>
+                  </div>
+                </form>
+              </Form>
             )}
           </DialogContent>
         </Dialog>
