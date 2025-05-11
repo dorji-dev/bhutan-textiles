@@ -7,7 +7,7 @@ const Footer = () => {
       {/* Main footer content */}
       <div className="container mx-auto px-4 py-12">
         <div className="flex flex-col items-center mb-10">
-          <h2 className="font-heading text-2xl font-bold mb-2">Bhutan Art</h2>
+          <h2 className="font-heading text-2xl font-bold mb-2">Zorig Online</h2>
           <p className="text-white/70 text-center max-w-md">
             Bringing authentic Bhutanese craftsmanship directly from artisans to your home.
           </p>
@@ -21,7 +21,7 @@ const Footer = () => {
               <li className="flex items-start">
                 <Mail className="h-5 w-5 text-[#D4A017] mr-3 mt-0.5" />
                 <span className="text-white/70">
-                  info@bhutanart.com
+                  info@zorigonline.com
                 </span>
               </li>
               <li className="flex items-start">
@@ -78,7 +78,7 @@ const Footer = () => {
       <div className="border-t border-white/10">
         <div className="container mx-auto px-4 py-6">
           <p className="text-sm text-white/60 text-center">
-            © 2025 Bhutan Art. All Rights Reserved.
+            © 2025 Zorig Online. All Rights Reserved.
           </p>
         </div>
       </div>

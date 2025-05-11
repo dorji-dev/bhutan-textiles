@@ -16,7 +16,7 @@ const notoSerif = Noto_Serif_Display({
 });
 
 export const metadata: Metadata = {
-  title: 'Bhutan Art - Authentic Bhutanese Textiles & Paintings',
+  title: 'Zorig Online - Authentic Bhutanese Textiles & Paintings',
   description: 'Discover handcrafted Bhutanese textiles and paintings, directly sourced from local artisans. Supporting traditions and communities in Bhutan.',
 };
 
