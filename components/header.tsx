@@ -1,14 +1,14 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Menu, X, ShoppingBag, LayoutDashboard, User } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useCartStore } from "@/lib/cart-store";
 import CartModal from "./cart-modal";
 import { signOut } from "@/lib/auth";
 import { toast } from "sonner";
+import { getCartItems } from "@/lib/cart";
 
 import {
   DropdownMenu,
@@ -22,10 +22,24 @@ const Header = () => {
   const router = useRouter();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isCartOpen, setIsCartOpen] = useState(false);
-  const items = useCartStore((state) => state.items);
+  const [cartItems, setCartItems] = useState<any[]>([]);
   const isLoggedIn = false; // TODO: Replace with actual auth state
 
-  const cartItemCount = items.reduce((total, item) => total + item.quantity, 0);
+  useEffect(() => {
+    loadCartItems();
+  }, []);
+
+  const loadCartItems = async () => {
+    try {
+      const items = await getCartItems();
+      setCartItems(items);
+    } catch (error) {
+      // If not authenticated or other error, silently fail
+      setCartItems([]);
+    }
+  };
+
+  const cartItemCount = cartItems.reduce((total, item) => total + item.quantity, 0);
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
