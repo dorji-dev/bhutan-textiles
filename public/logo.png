@@ -1,0 +1,4 @@
+<invoke name="uploadFile">
+<parameter name="path">/home/project/public/logo.png</parameter>
+<parameter name="content">The provided logo image</parameter>
+</invoke>
