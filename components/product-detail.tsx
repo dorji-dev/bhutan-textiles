@@ -37,25 +37,6 @@ export default function ProductDetail({ product }: ProductDetailProps) {
     );
   }
 
-  const relatedProducts = [
-    {
-      id: "3",
-      name: "Ceremonial Scarf",
-      price: 89.99,
-      category: "textiles",
-      description: "Handwoven silk scarf used in formal ceremonies",
-      images: ["https://images.pexels.com/photos/6069552/pexels-photo-6069552.jpeg"],
-    },
-    {
-      id: "4",
-      name: "Bhutanese Tapestry",
-      price: 249.99,
-      category: "textiles",
-      description: "Wall hanging with traditional motifs and symbols",
-      images: ["https://images.pexels.com/photos/5913169/pexels-photo-5913169.jpeg"],
-    },
-  ];
-
   const nextImage = () => {
     setSelectedImage((prev) => (prev + 1) % product.images.length);
   };
@@ -153,17 +134,6 @@ export default function ProductDetail({ product }: ProductDetailProps) {
               <ShoppingCart className="mr-2 h-4 w-4" />
               Add to Cart
             </Button>
-          </div>
-        </div>
-
-        <div className="mt-16">
-          <h2 className="font-heading text-2xl font-bold text-neutral-900 mb-6">
-            Related Products
-          </h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {relatedProducts.map((product) => (
-              <ProductCard key={product.id} product={product} />
-            ))}
           </div>
         </div>
 
