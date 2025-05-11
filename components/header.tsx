@@ -2,13 +2,13 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
 import { Menu, X, ShoppingBag, LayoutDashboard, User } from "lucide-react";
 import { cn } from "@/lib/utils";
 import CartModal from "./cart-modal";
 import { signOut, getCurrentUser, AuthUser } from "@/lib/auth";
 import { toast } from "sonner";
 import { getCartItems } from "@/lib/cart";
+import Logo from "./logo";
 
 import {
   DropdownMenu,
@@ -17,6 +17,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
+import Link from "next/link";
 
 const Header = () => {
   const router = useRouter();
@@ -64,7 +65,7 @@ const Header = () => {
   };
 
   if (isLoading) {
-    return null; // Don't render anything while loading
+    return null;
   }
 
   return (
@@ -72,11 +73,7 @@ const Header = () => {
       <div className="container mx-auto px-4 py-3 md:py-4">
         <div className="flex items-center justify-between">
           {/* Logo */}
-          <Link href="/" className="flex items-center">
-            <h1 className="font-heading text-2xl font-bold text-primary">
-              Bhutan Art
-            </h1>
-          </Link>
+          <Logo />
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center space-x-6">
