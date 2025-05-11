@@ -66,12 +66,14 @@ import { toast } from "sonner";
 const productSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
   description: z.string().min(10, "Description must be at least 10 characters"),
-  price: z.string().transform((val) => Number(val)),
+  price: z.coerce.number().min(0, "Price must be greater than 0"),
   category: z.enum(["textiles", "paintings"]),
-  stock: z.string().transform((val) => Number(val)),
+  stock: z.coerce.number().min(0, "Stock must be greater than or equal to 0"),
   status: z.enum(["active", "inactive"]),
   images: z.array(z.string()).min(1, "At least one image is required"),
 });
+
+type ProductFormValues = z.infer<typeof productSchema>;
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -80,40 +82,40 @@ export default function DashboardPage() {
   const [selectedProduct, setSelectedProduct] = useState<any>(null);
   const [isViewProductOpen, setIsViewProductOpen] = useState(false);
   const [isEditProductOpen, setIsEditProductOpen] = useState(false);
-  const [newImagePreviews, setNewImagePreviews] = useState<string[]>([]);
-  const [editImagePreviews, setEditImagePreviews] = useState<string[]>([]);
+  const [newImageUrl, setNewImageUrl] = useState("");
+  const [editImageUrl, setEditImageUrl] = useState("");
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
+
+  const addProductForm = useForm<ProductFormValues>({
+    resolver: zodResolver(productSchema),
+    defaultValues: {
+      name: "",
+      description: "",
+      price: 0,
+      category: "textiles",
+      stock: 0,
+      status: "active",
+      images: [],
+    },
+  });
+
+  const editProductForm = useForm<ProductFormValues>({
+    resolver: zodResolver(productSchema),
+    defaultValues: {
+      name: "",
+      description: "",
+      price: 0,
+      category: "textiles",
+      stock: 0,
+      status: "active",
+      images: [],
+    },
+  });
 
   useEffect(() => {
     loadProducts();
   }, []);
-
-  const addProductForm = useForm<z.infer<typeof productSchema>>({
-    resolver: zodResolver(productSchema),
-    defaultValues: {
-      name: "",
-      description: "",
-      price: "0",
-      category: "textiles",
-      stock: "0",
-      status: "active",
-      images: [],
-    },
-  });
-
-  const editProductForm = useForm<z.infer<typeof productSchema>>({
-    resolver: zodResolver(productSchema),
-    defaultValues: {
-      name: "",
-      description: "",
-      price: "0",
-      category: "textiles",
-      stock: "0",
-      status: "active",
-      images: [],
-    },
-  });
 
   const loadProducts = async () => {
     try {
@@ -124,50 +126,52 @@ export default function DashboardPage() {
     }
   };
 
-  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>, isEdit: boolean) => {
-    const files = e.target.files;
-    if (!files) return;
-
-    const urls = Array.from(files).map(file => URL.createObjectURL(file));
-
+  const handleAddImage = (isEdit: boolean) => {
     if (isEdit) {
-      setEditImagePreviews(prev => [...prev, ...urls]);
-      editProductForm.setValue("images", [...editImagePreviews, ...urls]);
+      if (!editImageUrl) return;
+      const currentImages = editProductForm.getValues("images");
+      editProductForm.setValue("images", [...currentImages, editImageUrl]);
+      setEditImageUrl("");
     } else {
-      setNewImagePreviews(prev => [...prev, ...urls]);
-      addProductForm.setValue("images", [...newImagePreviews, ...urls]);
+      if (!newImageUrl) return;
+      const currentImages = addProductForm.getValues("images");
+      addProductForm.setValue("images", [...currentImages, newImageUrl]);
+      setNewImageUrl("");
     }
   };
 
   const removeImage = (index: number, isEdit: boolean) => {
     if (isEdit) {
-      const newPreviews = editImagePreviews.filter((_, i) => i !== index);
-      setEditImagePreviews(newPreviews);
-      editProductForm.setValue("images", newPreviews);
+      const currentImages = editProductForm.getValues("images");
+      editProductForm.setValue(
+        "images",
+        currentImages.filter((_, i) => i !== index)
+      );
     } else {
-      const newPreviews = newImagePreviews.filter((_, i) => i !== index);
-      setNewImagePreviews(newPreviews);
-      addProductForm.setValue("images", newPreviews);
+      const currentImages = addProductForm.getValues("images");
+      addProductForm.setValue(
+        "images",
+        currentImages.filter((_, i) => i !== index)
+      );
     }
   };
 
-  const handleAddProduct = async (values: z.infer<typeof productSchema>) => {
+  const handleAddProduct = async (values: ProductFormValues) => {
     try {
       setIsLoading(true);
       await createProduct(values);
       toast.success("Product created successfully");
       setIsAddProductOpen(false);
-      setNewImagePreviews([]);
       addProductForm.reset();
       loadProducts();
     } catch (error: any) {
-      toast.error(error.message);
+      toast.error(error.message || "Failed to create product");
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleEditProduct = async (values: z.infer<typeof productSchema>) => {
+  const handleEditProduct = async (values: ProductFormValues) => {
     if (!selectedProduct) return;
 
     try {
@@ -175,11 +179,10 @@ export default function DashboardPage() {
       await updateProduct(selectedProduct.id, values);
       toast.success("Product updated successfully");
       setIsEditProductOpen(false);
-      setEditImagePreviews([]);
       editProductForm.reset();
       loadProducts();
     } catch (error: any) {
-      toast.error(error.message);
+      toast.error(error.message || "Failed to update product");
     } finally {
       setIsLoading(false);
     }
@@ -191,19 +194,18 @@ export default function DashboardPage() {
       toast.success("Product deleted successfully");
       loadProducts();
     } catch (error: any) {
-      toast.error(error.message);
+      toast.error(error.message || "Failed to delete product");
     }
   };
 
   const handleEditOpen = (product: any) => {
     setSelectedProduct(product);
-    setEditImagePreviews(product.images);
     editProductForm.reset({
       name: product.name,
       description: product.description,
-      price: String(product.price),
+      price: product.price,
       category: product.category,
-      stock: String(product.stock),
+      stock: product.stock,
       status: product.status,
       images: product.images,
     });
@@ -327,44 +329,81 @@ export default function DashboardPage() {
                       </FormItem>
                     )}
                   />
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium">Images</label>
-                    <Input 
-                      type="file" 
-                      multiple 
-                      accept="image/*"
-                      onChange={(e) => handleImageUpload(e, false)}
-                    />
-                    {newImagePreviews.length > 0 && (
-                      <div className="grid grid-cols-3 gap-4 mt-4">
-                        {newImagePreviews.map((preview, index) => (
-                          <div key={index} className="relative">
-                            <img
-                              src={preview}
-                              alt={`Preview ${index + 1}`}
-                              className="w-full h-24 object-cover rounded-lg"
-                            />
+                  <FormField
+                    control={addProductForm.control}
+                    name="status"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Status</FormLabel>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select status" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="active">Active</SelectItem>
+                            <SelectItem value="inactive">Inactive</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={addProductForm.control}
+                    name="images"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Images</FormLabel>
+                        <div className="space-y-4">
+                          <div className="flex gap-2">
+                            <FormControl>
+                              <Input
+                                placeholder="Enter image URL"
+                                value={newImageUrl}
+                                onChange={(e) => setNewImageUrl(e.target.value)}
+                              />
+                            </FormControl>
                             <Button
                               type="button"
-                              variant="destructive"
-                              size="icon"
-                              className="absolute -top-2 -right-2 h-6 w-6"
-                              onClick={() => removeImage(index, false)}
+                              variant="outline"
+                              onClick={() => handleAddImage(false)}
                             >
-                              <X className="h-4 w-4" />
+                              Add
                             </Button>
                           </div>
-                        ))}
-                      </div>
+                          <div className="grid grid-cols-3 gap-4">
+                            {field.value.map((url, index) => (
+                              <div key={index} className="relative">
+                                <img
+                                  src={url}
+                                  alt={`Preview ${index + 1}`}
+                                  className="w-full h-24 object-cover rounded-lg"
+                                />
+                                <Button
+                                  type="button"
+                                  variant="destructive"
+                                  size="icon"
+                                  className="absolute -top-2 -right-2 h-6 w-6"
+                                  onClick={() => removeImage(index, false)}
+                                >
+                                  <X className="h-4 w-4" />
+                                </Button>
+                              </div>
+                            ))}
+                          </div>
+                          <FormMessage />
+                        </div>
+                      </FormItem>
                     )}
-                  </div>
+                  />
                   <div className="flex justify-end space-x-2 mt-6">
                     <Button
                       type="button"
                       variant="outline"
                       onClick={() => {
                         setIsAddProductOpen(false);
-                        setNewImagePreviews([]);
                         addProductForm.reset();
                       }}
                     >
@@ -727,44 +766,81 @@ export default function DashboardPage() {
                       </FormItem>
                     )}
                   />
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium">Images</label>
-                    <Input 
-                      type="file" 
-                      multiple 
-                      accept="image/*"
-                      onChange={(e) => handleImageUpload(e, true)}
-                    />
-                    {editImagePreviews.length > 0 && (
-                      <div className="grid grid-cols-3 gap-4 mt-4">
-                        {editImagePreviews.map((preview, index) => (
-                          <div key={index} className="relative">
-                            <img
-                              src={preview}
-                              alt={`Preview ${index + 1}`}
-                              className="w-full h-24 object-cover rounded-lg"
-                            />
+                  <FormField
+                    control={editProductForm.control}
+                    name="status"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Status</FormLabel>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="active">Active</SelectItem>
+                            <SelectItem value="inactive">Inactive</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={editProductForm.control}
+                    name="images"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Images</FormLabel>
+                        <div className="space-y-4">
+                          <div className="flex gap-2">
+                            <FormControl>
+                              <Input
+                                placeholder="Enter image URL"
+                                value={editImageUrl}
+                                onChange={(e) => setEditImageUrl(e.target.value)}
+                              />
+                            </FormControl>
                             <Button
                               type="button"
-                              variant="destructive"
-                              size="icon"
-                              className="absolute -top-2 -right-2 h-6 w-6"
-                              onClick={() => removeImage(index, true)}
+                              variant="outline"
+                              onClick={() => handleAddImage(true)}
                             >
-                              <X className="h-4 w-4" />
+                              Add
                             </Button>
                           </div>
-                        ))}
-                      </div>
+                          <div className="grid grid-cols-3 gap-4">
+                            {field.value.map((url, index) => (
+                              <div key={index} className="relative">
+                                <img
+                                  src={url}
+                                  alt={`Preview ${index + 1}`}
+                                  className="w-full h-24 object-cover rounded-lg"
+                                />
+                                <Button
+                                  type="button"
+                                  variant="destructive"
+                                  size="icon"
+                                  className="absolute -top-2 -right-2 h-6 w-6"
+                                  onClick={() => removeImage(index, true)}
+                                >
+                                  <X className="h-4 w-4" />
+                                </Button>
+                              </div>
+                            ))}
+                          </div>
+                          <FormMessage />
+                        </div>
+                      </FormItem>
                     )}
-                  </div>
+                  />
                   <div className="flex justify-end space-x-2 mt-6">
                     <Button
                       type="button"
                       variant="outline"
                       onClick={() => {
                         setIsEditProductOpen(false);
-                        setEditImagePreviews([]);
                         editProductForm.reset();
                       }}
                     >
