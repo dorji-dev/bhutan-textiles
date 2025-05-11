@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import ProductCard from "@/components/product-card";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
-import { ChevronLeft, ChevronRight, X, ShoppingCart } from "lucide-react";
+import { ChevronLeft, ChevronRight, X, ShoppingCart, Plus, Minus } from "lucide-react";
 import { useCartStore } from "@/lib/cart-store";
 import CartModal from "./cart-modal";
 import { Product, getProducts } from "@/lib/products";
@@ -18,6 +18,7 @@ export default function ProductDetail({ product }: ProductDetailProps) {
   const [selectedImage, setSelectedImage] = useState(0);
   const [isImageDialogOpen, setIsImageDialogOpen] = useState(false);
   const [isCartOpen, setIsCartOpen] = useState(false);
+  const [quantity, setQuantity] = useState(1);
   const [relatedProducts, setRelatedProducts] = useState<Product[]>([]);
   const addItem = useCartStore((state) => state.addItem);
 
@@ -68,8 +69,22 @@ export default function ProductDetail({ product }: ProductDetailProps) {
       name: product.name,
       price: product.price,
       image: product.images[0],
+      quantity,
     });
     setIsCartOpen(true);
+    setQuantity(1); // Reset quantity after adding to cart
+  };
+
+  const incrementQuantity = () => {
+    if (quantity < product.stock) {
+      setQuantity(prev => prev + 1);
+    }
+  };
+
+  const decrementQuantity = () => {
+    if (quantity > 1) {
+      setQuantity(prev => prev - 1);
+    }
   };
 
   return (
@@ -143,13 +158,39 @@ export default function ProductDetail({ product }: ProductDetailProps) {
               </div>
             )}
 
+            <div className="flex items-center gap-4 mb-4">
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={decrementQuantity}
+                  disabled={quantity <= 1}
+                >
+                  <Minus className="h-4 w-4" />
+                </Button>
+                <span className="w-12 text-center font-medium">{quantity}</span>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={incrementQuantity}
+                  disabled={quantity >= product.stock}
+                >
+                  <Plus className="h-4 w-4" />
+                </Button>
+              </div>
+              <p className="text-sm text-neutral-600">
+                {product.stock} items available
+              </p>
+            </div>
+
             <Button 
               size="lg" 
               className="w-full bg-primary hover:bg-primary/90"
               onClick={handleAddToCart}
+              disabled={product.stock === 0}
             >
               <ShoppingCart className="mr-2 h-4 w-4" />
-              Add to Cart
+              {product.stock === 0 ? "Out of Stock" : "Add to Cart"}
             </Button>
           </div>
         </div>
