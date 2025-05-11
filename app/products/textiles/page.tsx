@@ -1,65 +1,83 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Slider } from "@/components/ui/slider";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import ProductCard from "@/components/product-card";
-import { SlidersHorizontal } from "lucide-react";
-
-// Mock data
-const textileProducts = [
-  {
-    id: 1,
-    name: "Traditional Kira",
-    price: 359.99,
-    image: "https://images.pexels.com/photos/19287537/pexels-photo-19287537/free-photo-of-woman-holding-fabric.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2",
-    description: "Handwoven traditional Bhutanese women's dress with intricate patterns",
-  },
-  {
-    id: 2,
-    name: "Yathra Textile",
-    price: 129.99,
-    image: "https://images.pexels.com/photos/6192351/pexels-photo-6192351.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2",
-    description: "Woolen textile with geometric patterns from central Bhutan",
-  },
-  {
-    id: 3,
-    name: "Ceremonial Scarf",
-    price: 89.99,
-    image: "https://images.pexels.com/photos/6069552/pexels-photo-6069552.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2",
-    description: "Handwoven silk scarf used in formal ceremonies",
-  },
-  {
-    id: 4,
-    name: "Bhutanese Tapestry",
-    price: 249.99,
-    image: "https://images.pexels.com/photos/5913169/pexels-photo-5913169.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2",
-    description: "Wall hanging with traditional motifs and symbols",
-  },
-  {
-    id: 5,
-    name: "Traditional Gho",
-    price: 399.99,
-    image: "https://images.pexels.com/photos/6192351/pexels-photo-6192351.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2",
-    description: "Men's traditional dress with hand-woven patterns",
-  },
-  {
-    id: 6,
-    name: "Silk Table Runner",
-    price: 149.99,
-    image: "https://images.pexels.com/photos/6069552/pexels-photo-6069552.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2",
-    description: "Decorative table runner with traditional Bhutanese motifs",
-  },
-];
+import { SlidersHorizontal, PackageSearch } from "lucide-react";
+import { getProducts, Product } from "@/lib/products";
 
 export default function TextilesPage() {
-  const [priceRange, setPriceRange] = useState([0, 500]);
+  const [priceRange, setPriceRange] = useState([0, 1000]);
   const [showMobileFilters, setShowMobileFilters] = useState(false);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const filteredProducts = textileProducts.filter(
+  useEffect(() => {
+    const loadProducts = async () => {
+      try {
+        const allProducts = await getProducts();
+        const textileProducts = allProducts.filter(
+          product => product.category === 'textiles' && product.status === 'active'
+        );
+        setProducts(textileProducts);
+      } catch (error) {
+        console.error('Error loading products:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadProducts();
+  }, []);
+
+  const filteredProducts = products.filter(
     (product) => product.price >= priceRange[0] && product.price <= priceRange[1]
   );
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-accent py-12">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-12">
+            <h1 className="font-heading text-4xl font-bold text-neutral-900 mb-4">
+              Bhutanese Textiles
+            </h1>
+            <p className="text-neutral-600 max-w-2xl mx-auto">
+              Loading products...
+            </p>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {[...Array(6)].map((_, i) => (
+              <div key={i} className="h-[400px] bg-white/50 rounded-lg animate-pulse" />
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (products.length === 0) {
+    return (
+      <div className="min-h-screen bg-accent py-12">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-12">
+            <h1 className="font-heading text-4xl font-bold text-neutral-900 mb-4">
+              Bhutanese Textiles
+            </h1>
+            <p className="text-neutral-600 max-w-2xl mx-auto">
+              No textile products available at the moment. Please check back later.
+            </p>
+          </div>
+          <div className="flex flex-col items-center justify-center py-12">
+            <PackageSearch className="h-16 w-16 text-neutral-400 mb-4" />
+            <p className="text-neutral-600">No products found</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-accent py-12">
@@ -85,7 +103,7 @@ export default function TextilesPage() {
                   <Slider
                     value={priceRange}
                     onValueChange={setPriceRange}
-                    max={500}
+                    max={1000}
                     step={10}
                     className="mb-2"
                   />
@@ -121,7 +139,7 @@ export default function TextilesPage() {
                     <Slider
                       value={priceRange}
                       onValueChange={setPriceRange}
-                      max={500}
+                      max={1000}
                       step={10}
                       className="mb-2"
                     />
@@ -145,6 +163,7 @@ export default function TextilesPage() {
 
             {filteredProducts.length === 0 && (
               <div className="text-center py-12">
+                <PackageSearch className="h-12 w-12 text-neutral-400 mx-auto mb-4" />
                 <p className="text-neutral-600">
                   No products found in the selected price range.
                 </p>
@@ -155,4 +174,3 @@ export default function TextilesPage() {
       </div>
     </div>
   );
-}
