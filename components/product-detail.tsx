@@ -6,9 +6,10 @@ import { Card } from "@/components/ui/card";
 import ProductCard from "@/components/product-card";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { ChevronLeft, ChevronRight, X, ShoppingCart, Plus, Minus } from "lucide-react";
-import { useCartStore } from "@/lib/cart-store";
 import CartModal from "./cart-modal";
 import { Product, getProducts } from "@/lib/products";
+import { addToCart } from "@/lib/cart";
+import { toast } from "sonner";
 
 interface ProductDetailProps {
   product: Product;
@@ -20,7 +21,7 @@ export default function ProductDetail({ product }: ProductDetailProps) {
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [quantity, setQuantity] = useState(1);
   const [relatedProducts, setRelatedProducts] = useState<Product[]>([]);
-  const addItem = useCartStore((state) => state.addItem);
+  const [isAddingToCart, setIsAddingToCart] = useState(false);
 
   useEffect(() => {
     async function loadRelatedProducts() {
@@ -63,16 +64,18 @@ export default function ProductDetail({ product }: ProductDetailProps) {
     setSelectedImage((prev) => (prev - 1 + product.images.length) % product.images.length);
   };
 
-  const handleAddToCart = () => {
-    addItem({
-      id: product.id,
-      name: product.name,
-      price: product.price,
-      image: product.images[0],
-      quantity,
-    });
-    setIsCartOpen(true);
-    setQuantity(1); // Reset quantity after adding to cart
+  const handleAddToCart = async () => {
+    try {
+      setIsAddingToCart(true);
+      await addToCart(product.id, quantity);
+      setIsCartOpen(true);
+      setQuantity(1);
+      toast.success("Added to cart successfully!");
+    } catch (error: any) {
+      toast.error(error.message || "Failed to add to cart");
+    } finally {
+      setIsAddingToCart(false);
+    }
   };
 
   const incrementQuantity = () => {
@@ -187,10 +190,10 @@ export default function ProductDetail({ product }: ProductDetailProps) {
               size="lg" 
               className="w-full bg-primary hover:bg-primary/90"
               onClick={handleAddToCart}
-              disabled={product.stock === 0}
+              disabled={product.stock === 0 || isAddingToCart}
             >
               <ShoppingCart className="mr-2 h-4 w-4" />
-              {product.stock === 0 ? "Out of Stock" : "Add to Cart"}
+              {product.stock === 0 ? "Out of Stock" : isAddingToCart ? "Adding to Cart..." : "Add to Cart"}
             </Button>
           </div>
         </div>

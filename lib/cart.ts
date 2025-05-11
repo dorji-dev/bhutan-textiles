@@ -15,6 +15,9 @@ export interface CartItem {
 }
 
 export async function getCartItems(): Promise<CartItem[]> {
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session) throw new Error('Not authenticated');
+
   const { data: cartItems, error } = await supabase
     .from('cart_items')
     .select(`
@@ -24,7 +27,8 @@ export async function getCartItems(): Promise<CartItem[]> {
         price,
         product_images (url)
       )
-    `);
+    `)
+    .eq('user_id', session.user.id);
 
   if (error) throw error;
 
@@ -38,9 +42,13 @@ export async function getCartItems(): Promise<CartItem[]> {
 }
 
 export async function addToCart(productId: string, quantity: number = 1) {
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session) throw new Error('Not authenticated');
+
   const { data: existingItem } = await supabase
     .from('cart_items')
     .select('*')
+    .eq('user_id', session.user.id)
     .eq('product_id', productId)
     .single();
 
@@ -55,6 +63,7 @@ export async function addToCart(productId: string, quantity: number = 1) {
     const { error } = await supabase
       .from('cart_items')
       .insert([{
+        user_id: session.user.id,
         product_id: productId,
         quantity
       }]);
@@ -64,6 +73,9 @@ export async function addToCart(productId: string, quantity: number = 1) {
 }
 
 export async function updateCartItemQuantity(itemId: string, quantity: number) {
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session) throw new Error('Not authenticated');
+
   if (quantity <= 0) {
     return removeFromCart(itemId);
   }
@@ -71,25 +83,33 @@ export async function updateCartItemQuantity(itemId: string, quantity: number) {
   const { error } = await supabase
     .from('cart_items')
     .update({ quantity })
-    .eq('id', itemId);
+    .eq('id', itemId)
+    .eq('user_id', session.user.id);
 
   if (error) throw error;
 }
 
 export async function removeFromCart(itemId: string) {
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session) throw new Error('Not authenticated');
+
   const { error } = await supabase
     .from('cart_items')
     .delete()
-    .eq('id', itemId);
+    .eq('id', itemId)
+    .eq('user_id', session.user.id);
 
   if (error) throw error;
 }
 
 export async function clearCart() {
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session) throw new Error('Not authenticated');
+
   const { error } = await supabase
     .from('cart_items')
     .delete()
-    .neq('id', '');
+    .eq('user_id', session.user.id);
 
   if (error) throw error;
 }
