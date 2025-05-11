@@ -25,47 +25,69 @@ export interface OrderItem {
   created_at: string;
 }
 
-export async function getOrders(): Promise<Order[]> {
-  const { data: orders, error } = await supabase
-    .from('orders')
-    .select(`
-      *,
-      order_items (*)
-    `)
-    .order('created_at', { ascending: false });
-
-  if (error) throw error;
-  return orders;
-}
-
 export async function createOrder(
-  order: Omit<Order, 'id' | 'created_at' | 'updated_at'> & { items: Omit<OrderItem, 'id' | 'order_id' | 'created_at'>[] }
+  shippingInfo: {
+    fullName: string;
+    email: string;
+    phone: string;
+    address: string;
+    city: string;
+    country: string;
+    postalCode: string;
+  },
+  cartItems: any[]
 ) {
-  const { data: orderData, error: orderError } = await supabase
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session) throw new Error('Not authenticated');
+
+  // Calculate total
+  const total = cartItems.reduce((sum, item) => {
+    return sum + (item.quantity * item.product.price);
+  }, 0);
+
+  // Create order
+  const { data: order, error: orderError } = await supabase
     .from('orders')
     .insert([{
-      user_id: order.user_id,
-      status: order.status,
-      total: order.total,
-      shipping_address: order.shipping_address,
+      user_id: session.user.id,
+      status: 'processing',
+      total,
+      shipping_address: {
+        full_name: shippingInfo.fullName,
+        email: shippingInfo.email,
+        phone: shippingInfo.phone,
+        address: shippingInfo.address,
+        city: shippingInfo.city,
+        country: shippingInfo.country,
+        postal_code: shippingInfo.postalCode,
+      },
     }])
     .select()
     .single();
 
   if (orderError) throw orderError;
 
+  // Create order items
+  const orderItems = cartItems.map(item => ({
+    order_id: order.id,
+    product_id: item.product_id,
+    quantity: item.quantity,
+    price: item.product.price,
+  }));
+
   const { error: itemsError } = await supabase
     .from('order_items')
-    .insert(
-      order.items.map(item => ({
-        order_id: orderData.id,
-        product_id: item.product_id,
-        quantity: item.quantity,
-        price: item.price,
-      }))
-    );
+    .insert(orderItems);
 
   if (itemsError) throw itemsError;
 
-  return orderData;
+  // Clear cart
+  const { error: clearCartError } = await supabase
+    .from('cart_items')
+    .delete()
+    .eq('user_id', session.user.id);
+
+  if (clearCartError) throw clearCartError;
+
+  return order;
 }
