@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
@@ -61,6 +61,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { createProduct, getProducts, updateProduct, deleteProduct } from "@/lib/products";
+import { uploadProductImages } from "@/lib/storage";
 import { toast } from "sonner";
 
 const productSchema = z.object({
@@ -86,6 +87,9 @@ export default function DashboardPage() {
   const [editImageUrl, setEditImageUrl] = useState("");
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const editFileInputRef = useRef<HTMLInputElement>(null);
+  const [uploadingImages, setUploadingImages] = useState(false);
 
   const addProductForm = useForm<ProductFormValues>({
     resolver: zodResolver(productSchema),
@@ -137,6 +141,34 @@ export default function DashboardPage() {
       const currentImages = addProductForm.getValues("images");
       addProductForm.setValue("images", [...currentImages, newImageUrl]);
       setNewImageUrl("");
+    }
+  };
+
+  const handleFileSelect = async (event: React.ChangeEvent<HTMLInputElement>, isEdit: boolean) => {
+    const files = Array.from(event.target.files || []);
+    if (files.length === 0) return;
+
+    try {
+      setUploadingImages(true);
+      const urls = await uploadProductImages(files);
+      
+      if (isEdit) {
+        const currentImages = editProductForm.getValues("images");
+        editProductForm.setValue("images", [...currentImages, ...urls]);
+      } else {
+        const currentImages = addProductForm.getValues("images");
+        addProductForm.setValue("images", [...currentImages, ...urls]);
+      }
+    } catch (error: any) {
+      toast.error(error.message || "Failed to upload images");
+    } finally {
+      setUploadingImages(false);
+      // Reset the file input
+      if (isEdit) {
+        if (editFileInputRef.current) editFileInputRef.current.value = '';
+      } else {
+        if (fileInputRef.current) fileInputRef.current.value = '';
+      }
     }
   };
 
@@ -358,19 +390,21 @@ export default function DashboardPage() {
                         <FormLabel>Images</FormLabel>
                         <div className="space-y-4">
                           <div className="flex gap-2">
-                            <FormControl>
-                              <Input
-                                placeholder="Enter image URL"
-                                value={newImageUrl}
-                                onChange={(e) => setNewImageUrl(e.target.value)}
-                              />
-                            </FormControl>
+                            <input
+                              type="file"
+                              ref={fileInputRef}
+                              multiple
+                              accept="image/*"
+                              className="hidden"
+                              onChange={(e) => handleFileSelect(e, false)}
+                            />
                             <Button
                               type="button"
                               variant="outline"
-                              onClick={() => handleAddImage(false)}
+                              onClick={() => fileInputRef.current?.click()}
+                              disabled={uploadingImages}
                             >
-                              Add
+                              {uploadingImages ? "Uploading..." : "Select Images"}
                             </Button>
                           </div>
                           <div className="grid grid-cols-3 gap-4">
@@ -795,19 +829,21 @@ export default function DashboardPage() {
                         <FormLabel>Images</FormLabel>
                         <div className="space-y-4">
                           <div className="flex gap-2">
-                            <FormControl>
-                              <Input
-                                placeholder="Enter image URL"
-                                value={editImageUrl}
-                                onChange={(e) => setEditImageUrl(e.target.value)}
-                              />
-                            </FormControl>
+                            <input
+                              type="file"
+                              ref={editFileInputRef}
+                              multiple
+                              accept="image/*"
+                              className="hidden"
+                              onChange={(e) => handleFileSelect(e, true)}
+                            />
                             <Button
                               type="button"
                               variant="outline"
-                              onClick={() => handleAddImage(true)}
+                              onClick={() => editFileInputRef.current?.click()}
+                              disabled={uploadingImages}
                             >
-                              Add
+                              {uploadingImages ? "Uploading..." : "Select Images"}
                             </Button>
                           </div>
                           <div className="grid grid-cols-3 gap-4">
