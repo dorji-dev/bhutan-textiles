@@ -45,14 +45,16 @@ export async function addToCart(productId: string, quantity: number = 1) {
   const { data: { session } } = await supabase.auth.getSession();
   if (!session) throw new Error('Not authenticated');
 
-  const { data: existingItem } = await supabase
+  const { data: existingItems, error: searchError } = await supabase
     .from('cart_items')
     .select('*')
     .eq('user_id', session.user.id)
-    .eq('product_id', productId)
-    .single();
+    .eq('product_id', productId);
 
-  if (existingItem) {
+  if (searchError) throw searchError;
+
+  if (existingItems && existingItems.length > 0) {
+    const existingItem = existingItems[0];
     const { error } = await supabase
       .from('cart_items')
       .update({ quantity: existingItem.quantity + quantity })
