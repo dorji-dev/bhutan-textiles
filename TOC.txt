@@ -1,0 +1,76 @@
+# Zorig Online - Project Table of Contents
+
+## 1. Core Structure
+- Next.js App Router structure
+- Tailwind CSS styling with custom Bhutanese-inspired color palette
+- shadcn/ui components
+- Supabase integration for database and authentication
+
+## 2. Pages
+- Home Page (`app/page.tsx`) - Main landing page with hero section and featured products
+- About Page (`app/about/page.tsx`) - Company mission and cultural heritage information
+- Product Pages:
+  - Product Listing (`app/products/textiles/page.tsx` & `app/products/paintings/page.tsx`)
+  - Product Detail (`app/product/[id]/page.tsx`) - Individual product view with details
+- Authentication:
+  - Login (`app/login/page.tsx`) - User login form
+  - Registration (`app/register/page.tsx`, `app/register/customer/page.tsx`, `app/register/artisan/page.tsx`)
+- User Dashboard:
+  - Artisan Dashboard (`app/dashboard/page.tsx`) - For artisans to manage products
+  - Orders (`app/orders/page.tsx`) - Order history for customers
+- Checkout (`app/checkout/page.tsx`) - Checkout process
+- Contact (`app/contact/page.tsx`) - Contact form and information
+
+## 3. Components
+- Layout Components:
+  - Header (`components/header.tsx`) - Navigation and user menu
+  - Footer (`components/footer.tsx`) - Site footer with links and contact info
+  - Logo (`components/logo.tsx`) - Site logo component
+- Home Page Components:
+  - Hero (`components/hero.tsx`) - Main hero section
+  - Featured Products (`components/featured-products.tsx`) - Product showcases
+  - Category Quick Links (`components/category-quick-links.tsx`)
+  - Why Shop With Us (`components/why-shop-with-us.tsx`)
+  - Artisan Spotlight (`components/artisan-spotlight.tsx`)
+  - Testimonials (`components/testimonials.tsx`)
+  - Cultural Inspiration (`components/cultural-inspiration.tsx`)
+  - Newsletter (`components/newsletter.tsx`)
+- Product Components:
+  - Product Card (`components/product-card.tsx`) - Individual product card
+  - Product Detail (`components/product-detail.tsx`) - Detailed product view
+- Cart Components:
+  - Cart Modal (`components/cart-modal.tsx`) - Shopping cart popup
+
+## 4. Data Management
+- Authentication (`lib/auth.ts`) - User authentication with Supabase
+- Products (`lib/products.ts`) - Product data management
+- Cart (`lib/cart.ts`) - Shopping cart functionality
+- Orders (`lib/orders.ts`) - Order processing and management
+- Artisans (`lib/artisans.ts`) - Artisan profile management
+- Storage (`lib/storage.ts`) - File storage for product images
+
+## 5. Database Schema (Supabase)
+- Users - User profiles with roles (customer/artisan)
+- Products - Product information
+- Product Images - Images for products
+- Orders - Order information
+- Order Items - Items within orders
+- Cart Items - Shopping cart items
+- Artisan Profiles - Extended profiles for artisans
+
+## 6. Styles
+- Global CSS (`app/globals.css`)
+- Tailwind configuration (`tailwind.config.ts`)
+- Custom color scheme with Bhutanese-inspired colors:
+  - Primary: #A61C3C (burgundy red)
+  - Secondary: #D4A017 (gold)
+  - Accent: #F5F5F5 (light gray)
+  - Neutral: #1E3A8A (deep blue)
+
+## 7. Authentication & Authorization
+- Middleware (`middleware.ts`) - Route protection and role-based access
+- User roles: Customer and Artisan with different permissions
+
+## 8. Deployment
+- Next.js configuration (`next.config.js`)
+- Environment variables setup
