@@ -41,23 +41,23 @@ A responsive, user-friendly marketplace built with Next.js, featuring a cultural
 - Weaknesses: Limited technical features, basic e-commerce functionality
 - Takeaways: Authentic representation of Bhutanese crafts
 
-## 5. Requirements Analysis
-
-### Functional Requirements
-1. User authentication and profile management
-2. Product browsing and filtering by category, price
-3. Shopping cart and checkout functionality
-4. Artisan profiles and storytelling
-5. Order management and tracking
-6. Admin dashboard for product management
-7. Secure payment processing
-
-### Non-Functional Requirements
-1. Responsive design for all device sizes
-2. Fast loading times (< 3 seconds)
-3. Secure data handling and privacy compliance
-4. Scalable architecture to handle growth
-5. Cultural authenticity in design and content
+  ## 5. Requirements Analysis
+  
+  ### Functional Requirements
+  1. User authentication and profile management
+  2. Product browsing and filtering by category, price
+  3. Shopping cart and checkout functionality
+  4. Artisan profiles and storytelling
+  5. Order management and tracking
+  6. Admin dashboard for product management
+  7. Secure payment processing
+  
+  ### Non-Functional Requirements
+  1. Responsive design for all device sizes
+  2. Fast loading times (< 3 seconds)
+  3. Secure data handling and privacy compliance
+  4. Scalable architecture to handle growth
+  5. Cultural authenticity in design and content
 
 ### Use Case Diagrams
 - Customer registration and authentication
