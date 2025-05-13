@@ -144,67 +144,8 @@ A responsive, user-friendly marketplace built with Next.js, featuring a cultural
 ## 9. Site Content & Structure
 
 ### Site Map
-Home
-├── Featured Products
-├── Category Quick Links
-├── Artisan Spotlight
-├── Testimonials
-└── Newsletter
 
-About
-├── Mission
-├── Cultural Heritage
-└── Artisan Stories
 
-Products
-├── Textiles
-│   ├── Listing
-│   └── Filters
-│       ├── Price Range
-│       └── Status
-└── Paintings
-    ├── Listing
-    └── Filters
-        ├── Price Range
-        └── Status
-
-Product Detail
-├── Images Gallery
-├── Product Information
-├── Artisan Details
-└── Related Products
-
-Contact
-├── Contact Form
-├── Location
-├── Business Hours
-└── FAQ
-
-Authentication
-├── Login
-└── Register
-    ├── Customer Registration
-    └── Artisan Registration
-
-User Account
-├── Customer
-│   ├── Order History
-│   └── Profile Settings
-└── Artisan Dashboard
-    ├── Product Management
-    │   ├── Add Product
-    │   ├── Edit Product
-    │   └── Delete Product
-    ├── Orders
-    └── Analytics
-
-Cart/Checkout
-├── Cart
-│   ├── Item List
-│   └── Cart Summary
-└── Checkout
-    ├── Shipping Information
-    └── Order Confirmation
 
 ### Content Inventory
 - Hero sections with high-quality imagery
