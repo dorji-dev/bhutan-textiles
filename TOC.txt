@@ -1,76 +1,248 @@
 # Zorig Online - Project Table of Contents
 
-## 1. Core Structure
-- Next.js App Router structure
-- Tailwind CSS styling with custom Bhutanese-inspired color palette
-- shadcn/ui components
-- Supabase integration for database and authentication
+## 1. Overview
+Zorig Online is a modern e-commerce platform showcasing authentic Bhutanese textiles and paintings, connecting artisans directly with global customers. The platform preserves Bhutanese cultural heritage while providing sustainable livelihoods for local craftspeople.
 
-## 2. Pages
-- Home Page (`app/page.tsx`) - Main landing page with hero section and featured products
-- About Page (`app/about/page.tsx`) - Company mission and cultural heritage information
-- Product Pages:
-  - Product Listing (`app/products/textiles/page.tsx` & `app/products/paintings/page.tsx`)
-  - Product Detail (`app/product/[id]/page.tsx`) - Individual product view with details
-- Authentication:
-  - Login (`app/login/page.tsx`) - User login form
-  - Registration (`app/register/page.tsx`, `app/register/customer/page.tsx`, `app/register/artisan/page.tsx`)
-- User Dashboard:
-  - Artisan Dashboard (`app/dashboard/page.tsx`) - For artisans to manage products
-  - Orders (`app/orders/page.tsx`) - Order history for customers
-- Checkout (`app/checkout/page.tsx`) - Checkout process
-- Contact (`app/contact/page.tsx`) - Contact form and information
+## 2. Description
+A responsive, user-friendly marketplace built with Next.js, featuring a culturally-inspired design that reflects Bhutanese aesthetics. The platform enables artisans to showcase their work and customers to purchase authentic handcrafted items.
 
-## 3. Components
-- Layout Components:
-  - Header (`components/header.tsx`) - Navigation and user menu
-  - Footer (`components/footer.tsx`) - Site footer with links and contact info
-  - Logo (`components/logo.tsx`) - Site logo component
-- Home Page Components:
-  - Hero (`components/hero.tsx`) - Main hero section
-  - Featured Products (`components/featured-products.tsx`) - Product showcases
-  - Category Quick Links (`components/category-quick-links.tsx`)
-  - Why Shop With Us (`components/why-shop-with-us.tsx`)
-  - Artisan Spotlight (`components/artisan-spotlight.tsx`)
-  - Testimonials (`components/testimonials.tsx`)
-  - Cultural Inspiration (`components/cultural-inspiration.tsx`)
-  - Newsletter (`components/newsletter.tsx`)
-- Product Components:
-  - Product Card (`components/product-card.tsx`) - Individual product card
-  - Product Detail (`components/product-detail.tsx`) - Detailed product view
-- Cart Components:
-  - Cart Modal (`components/cart-modal.tsx`) - Shopping cart popup
+## 3. Target Audience
+- International art collectors and enthusiasts interested in authentic Bhutanese crafts
+- Tourists who have visited or plan to visit Bhutan
+- Interior designers seeking unique, culturally significant pieces
+- Bhutanese artisans looking to expand their market reach
 
-## 4. Data Management
-- Authentication (`lib/auth.ts`) - User authentication with Supabase
-- Products (`lib/products.ts`) - Product data management
-- Cart (`lib/cart.ts`) - Shopping cart functionality
-- Orders (`lib/orders.ts`) - Order processing and management
-- Artisans (`lib/artisans.ts`) - Artisan profile management
-- Storage (`lib/storage.ts`) - File storage for product images
+## 4. Research
 
-## 5. Database Schema (Supabase)
-- Users - User profiles with roles (customer/artisan)
-- Products - Product information
-- Product Images - Images for products
-- Orders - Order information
-- Order Items - Items within orders
-- Cart Items - Shopping cart items
-- Artisan Profiles - Extended profiles for artisans
+### Site Research
 
-## 6. Styles
-- Global CSS (`app/globals.css`)
-- Tailwind configuration (`tailwind.config.ts`)
-- Custom color scheme with Bhutanese-inspired colors:
-  - Primary: #A61C3C (burgundy red)
-  - Secondary: #D4A017 (gold)
-  - Accent: #F5F5F5 (light gray)
-  - Neutral: #1E3A8A (deep blue)
+#### Site-01: Etsy
+- Strengths: User-friendly interface, robust search functionality, seller profiles
+- Weaknesses: Not specialized for cultural artifacts, overwhelming number of products
+- Takeaways: Clear product categorization and detailed artisan stories
 
-## 7. Authentication & Authorization
-- Middleware (`middleware.ts`) - Route protection and role-based access
-- User roles: Customer and Artisan with different permissions
+#### Site-02: Novica
+- Strengths: Focus on artisan stories, cultural context for products, fair trade practices
+- Weaknesses: Website can feel dated, limited filtering options
+- Takeaways: Emphasis on cultural significance and artisan background
 
-## 8. Deployment
-- Next.js configuration (`next.config.js`)
-- Environment variables setup
+#### Site-03: The Citizenry
+- Strengths: High-quality photography, minimal aesthetic, storytelling approach
+- Weaknesses: Limited product range, higher price point
+- Takeaways: Premium presentation of artisanal products
+
+#### Site-04: Ten Thousand Villages
+- Strengths: Strong ethical messaging, educational content about crafts
+- Weaknesses: Navigation could be improved, inconsistent product photography
+- Takeaways: Transparent supply chain and educational content
+
+#### Site-05: Bhutan Natural
+- Strengths: Authentic Bhutanese products, cultural context
+- Weaknesses: Limited technical features, basic e-commerce functionality
+- Takeaways: Authentic representation of Bhutanese crafts
+
+## 5. Requirements Analysis
+
+### Functional Requirements
+1. User authentication and profile management
+2. Product browsing and filtering by category, price
+3. Shopping cart and checkout functionality
+4. Artisan profiles and storytelling
+5. Order management and tracking
+6. Admin dashboard for product management
+7. Secure payment processing
+
+### Non-Functional Requirements
+1. Responsive design for all device sizes
+2. Fast loading times (< 3 seconds)
+3. Secure data handling and privacy compliance
+4. Scalable architecture to handle growth
+5. Cultural authenticity in design and content
+
+### Use Case Diagrams
+- Customer registration and authentication
+- Product browsing and purchase flow
+- Artisan product management
+- Order fulfillment process
+
+### Activity Diagrams
+- User registration process
+- Checkout and payment flow
+- Product listing by artisans
+- Order processing workflow
+
+### Data Flow Diagrams
+- User authentication flow
+- Product information flow
+- Order processing flow
+- Payment processing flow
+
+## 6. System Architecture
+
+### High-Level Architecture
+- Client-side: Next.js frontend with React components
+- Server-side: Next.js API routes
+- Database: Supabase (PostgreSQL)
+- Authentication: Supabase Auth
+- File Storage: Supabase Storage
+
+### Component Diagram
+- UI Components (Header, Footer, Product Cards, etc.)
+- Authentication Components
+- Product Management Components
+- Cart and Checkout Components
+- Order Management Components
+
+## 7. Database Design
+
+### Entity-Relationship (ER) Diagram
+- Users (Customers and Artisans)
+- Products
+- Categories
+- Orders
+- Order Items
+- Cart Items
+- Artisan Profiles
+
+### Data Dictionary
+- Users: User information including authentication details
+- Products: Product details including images, descriptions, pricing
+- Categories: Product categorization (textiles, paintings)
+- Orders: Order information including shipping details
+- Order Items: Individual items within orders
+- Cart Items: Items in user shopping carts
+- Artisan Profiles: Extended information about artisans
+
+### Database Schema
+- Implemented in Supabase with PostgreSQL
+- Row-level security policies for data protection
+- Relationships between tables for data integrity
+
+## 8. Technology Stack
+
+### Programming Languages
+- TypeScript/JavaScript (Next.js)
+- SQL (Supabase/PostgreSQL)
+
+### Frameworks
+- Next.js (React framework)
+- Tailwind CSS (Utility-first CSS framework)
+- shadcn/ui (Component library)
+
+### Database
+- Supabase (PostgreSQL-based backend as a service)
+
+### Other Tools and Technologies
+- Supabase Auth for authentication
+- Supabase Storage for image storage
+- React Hook Form for form handling
+- Zod for form validation
+- Lucide React for icons
+- date-fns for date formatting
+- Sonner for toast notifications
+
+## 9. Site Content & Structure
+
+### Site Map
+- Home
+- About
+- Products
+  - Textiles
+  - Paintings
+- Product Detail
+- Contact
+- User Account
+  - Login/Register
+  - Dashboard (Artisan)
+  - Orders (Customer)
+- Cart/Checkout
+
+### Content Inventory
+- Hero sections with high-quality imagery
+- Product listings with detailed descriptions
+- Artisan profiles and stories
+- Cultural context and educational content
+- Testimonials from customers
+- About page with mission and values
+- Contact information and form
+
+### Navigation Scheme
+- Primary navigation in header
+- Secondary navigation in footer
+- Breadcrumb navigation on product pages
+- User account navigation in dropdown menu
+- Mobile navigation in hamburger menu
+
+## 10. Content Design
+
+### Page Layout
+- Consistent header and footer across all pages
+- Hero sections on key landing pages
+- Grid-based product listings
+- Two-column layout for product detail pages
+- Form-based pages for checkout and contact
+
+### Wireframes
+- Home page with hero, featured products, and value propositions
+- Product listing pages with filtering options
+- Product detail page with images, description, and add to cart
+- Checkout flow with shipping and payment information
+- User dashboard for order management and product listing (artisans)
+
+## 11. Visual Design
+
+### Home Page Mock-Up
+- Hero section with Bhutanese imagery and call-to-action
+- Featured products section with high-quality photography
+- Value proposition section highlighting authenticity and impact
+- Artisan spotlight section with personal story
+- Category quick links with visual navigation
+
+### Composition
+- Clean, uncluttered layout with ample white space
+- Visual hierarchy emphasizing product imagery
+- Consistent spacing and alignment
+- Grid-based layout for responsive design
+
+### Colour Scheme
+- Primary: #A61C3C (burgundy red) - Representing traditional Bhutanese textiles
+- Secondary: #D4A017 (gold) - Symbolizing Buddhist traditions
+- Accent: #F5F5F5 (light gray) - Providing clean background
+- Neutral: #1E3A8A (deep blue) - Inspired by Bhutanese paintings
+
+### Typography
+- Headings: Noto Serif Display - Elegant serif font for cultural context
+- Body: Inter - Clean, modern sans-serif for readability
+
+## 12. Responsive Design
+
+### Overview
+- Mobile-first approach to ensure optimal experience on all devices
+- Fluid layouts that adapt to different screen sizes
+- Optimized images for different viewport sizes
+
+### Breakpoints for Different Device Sizes
+- Mobile: < 640px
+- Tablet: 640px - 1024px
+- Desktop: > 1024px
+
+## 13. SEO Strategy
+
+### On-page SEO
+- Semantic HTML structure
+- Optimized meta tags and descriptions
+- Proper heading hierarchy
+- Alt text for all images
+- Schema markup for products and organization
+
+### Off-page SEO
+- Social media integration
+- Artisan and customer testimonials
+- Content marketing through cultural stories
+- Partnerships with Bhutanese tourism organizations
+
+### SEO Plugins and Tools
+- Next.js built-in SEO capabilities
+- Structured data for rich snippets
+- XML sitemap generation
+- Analytics integration for performance monitoring
